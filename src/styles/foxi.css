@@ -1,0 +1,570 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Foxi – die eigene Schicht über dem Stamm.
+
+   Der Stamm (`stamm/variables.css`, `stamm/base.css`) liefert Farben, Radien,
+   Schatten, Schrift und das Verhalten der Knöpfe. Hier steht nur, was Foxi
+   selbst ist: die Kachelwand, die Liste, die untere Leiste.
+
+   Eine Regel zieht sich durch: Alles, was man antippt, ist mindestens 44 px
+   hoch. Foxi wird im Stehen, einhändig, mit dem Einkaufswagen in der anderen
+   Hand bedient. Was man zweimal treffen muss, ist kaputt.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    --topbar-height: 56px;
+    --tableiste-height: 62px;
+    --kachel-min: 98px;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Gerüst
+   ──────────────────────────────────────────────────────────────────────── */
+
+#app {
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: var(--topbar-height) 1fr auto;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+/* Kopfbereich – Form aus TourFuchs, nur der Leitton ist grün. */
+.topbar {
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    padding-top: env(safe-area-inset-top);
+    height: calc(var(--topbar-height) + env(safe-area-inset-top));
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-1);
+    z-index: 20;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    font-weight: 700;
+    font-size: 1.02rem;
+}
+.brand-icon { font-size: 1.25rem; }
+.brand em { font-style: normal; color: var(--color-primary); font-weight: 600; }
+
+/* Der Tiefenschalter. Identisch zu `.depth-switch.seg-toggle` in TourFuchs und
+   SoundFuchs – dieselbe Pille, dieselbe aktive Fläche, dieselben Radien. */
+.depth-switch {
+    display: flex;
+    gap: 3px;
+    margin-left: auto;
+    padding: 3px;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    flex-shrink: 0;
+}
+.depth-switch .seg {
+    border: none;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    padding: 7px 11px;
+    min-height: 34px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    transition: background 0.12s, color 0.12s, box-shadow 0.12s;
+}
+.depth-switch .seg:not(.active):hover { background: rgba(255, 255, 255, 0.78); }
+.depth-switch .seg.active,
+.depth-switch .seg.active:hover {
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+}
+.depth-switch .seg:focus-visible {
+    outline: 2px solid rgba(63, 145, 66, 0.4);
+    outline-offset: 1px;
+}
+
+/* Die Bühne: der einzige Bereich, der rollt. */
+#buehne {
+    grid-row: 2;
+    position: relative;
+    overflow: hidden;
+}
+.bereich {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 12px 24px;
+}
+.bereich[hidden] { display: none; }
+
+.bereich-kopf {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 16px 2px 10px;
+}
+.bereich-kopf h1 {
+    margin: 0;
+    font-size: 1.32rem;
+    letter-spacing: -0.01em;
+}
+.bereich-zahl {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Basis und Experte
+
+   Der Schalter setzt eine Klasse auf <body>, sonst nichts. Was zur Tiefe
+   gehört, trägt `.experte-nur` – ausgeblendet, nicht gelöscht. Deshalb ist
+   der Wechsel verlustfrei: Es gibt nichts zu retten, weil nichts weggeht.
+   ──────────────────────────────────────────────────────────────────────── */
+body:not(.modus-experte) .experte-nur { display: none !important; }
+
+/* ────────────────────────────────────────────────────────────────────────
+   Liste
+   ──────────────────────────────────────────────────────────────────────── */
+
+.gruppe { margin: 0 0 18px; }
+
+.gruppe-kopf {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 8px;
+    padding: 7px 2px 6px;
+    background: linear-gradient(var(--color-bg) 72%, rgba(247, 250, 245, 0));
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.045em;
+}
+.gruppe-kopf .gruppe-icon { font-size: 1rem; text-transform: none; }
+
+.listenliste {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+/* Die Kachel der Liste: volle Breite, damit Name, Menge und Notiz lesbar
+   bleiben – aber derselbe Griff wie im Katalog. Ein Tipp hakt ab. */
+.listenkarte {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 62px;
+    padding: 11px 14px;
+    text-align: left;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-m);
+    box-shadow: var(--shadow-1);
+    font-size: 0.98rem;
+    color: var(--color-text);
+    transition: transform 0.09s ease, background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.listenkarte:hover { background: var(--color-surface); border-color: #cfe3cf; }
+.listenkarte:active { transform: scale(0.985); }
+
+.listenkarte .karte-icon { font-size: 1.5rem; line-height: 1; }
+.listenkarte .karte-text { min-width: 0; }
+.listenkarte .karte-name {
+    display: block;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.listenkarte .karte-zusatz {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Der Haken. Leer ein Ring, gesetzt eine grüne Fläche – mehr Erklärung
+   braucht es nicht. */
+.haken {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #cbd5cb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: transparent;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.listenkarte.ist-erledigt { opacity: 0.55; background: var(--color-surface-2); box-shadow: none; }
+.listenkarte.ist-erledigt .karte-name { text-decoration: line-through; }
+.listenkarte.ist-erledigt .haken {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+/* Kurzes Aufleuchten beim Abhaken: die Bestätigung, dass der Tipp ankam –
+   auch wenn die Zeile im selben Moment in den erledigten Teil rutscht. */
+@keyframes foxi-quittung {
+    0%   { background: var(--color-primary-light); }
+    100% { background: var(--color-surface); }
+}
+.listenkarte.quittung { animation: foxi-quittung 0.45s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+    .listenkarte.quittung { animation: none; }
+}
+
+/* Menge und Notiz (Experte). Der Stift steht neben der Zeile, nicht in ihr:
+   Ein Ziel innerhalb eines anderen Ziels wäre auf 44 px nicht sicher zu
+   treffen – man will abhaken und öffnet das Textfeld. */
+.listenliste li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 6px;
+}
+/* `1 1 0`, nicht `1 1 auto`: Mit der Eigenbreite als Grundlage ist die Karte
+   breiter als die Zeile, und der Stift rutscht in die nächste – er stand
+   dann unter der Zeile statt neben ihr. */
+.listenliste li > .listenkarte { flex: 1 1 0; min-width: 0; }
+
+.karte-stift {
+    flex: 0 0 48px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-m);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-1);
+    font-size: 1.05rem;
+    color: var(--color-text-muted);
+}
+
+.mengen-editor {
+    flex: 1 0 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-m);
+}
+.mengen-editor input { flex: 1 1 128px; min-height: 42px; }
+.mengen-editor button { flex: 0 0 auto; min-height: 42px; }
+
+.erledigt-block { margin-top: 4px; }
+.erledigt-kopf {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 6px 2px 8px;
+}
+.erledigt-kopf h2 {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.045em;
+}
+.erledigt-kopf button { font-size: 0.8rem; padding: 0.4em 0.8em; }
+
+/* Leerer Zustand: kein trauriges Grau, sondern der Weg zum nächsten Schritt. */
+.leer {
+    margin: 34px auto 0;
+    max-width: 380px;
+    padding: 30px 22px;
+    text-align: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-1);
+}
+.leer-icon { font-size: 2.6rem; line-height: 1; }
+.leer h2 { margin: 12px 0 6px; font-size: 1.05rem; color: var(--color-text); text-transform: none; letter-spacing: 0; }
+.leer p { margin: 0 0 18px; color: var(--color-text-muted); font-size: 0.9rem; line-height: 1.45; }
+.leer button.primary { min-height: 46px; padding: 0.6em 1.4em; font-size: 0.95rem; }
+
+/* ────────────────────────────────────────────────────────────────────────
+   Katalog – die Kachelwand
+   ──────────────────────────────────────────────────────────────────────── */
+
+.suchzeile {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    padding: 12px 0 10px;
+    background: linear-gradient(var(--color-bg) 80%, rgba(247, 250, 245, 0));
+}
+.suchzeile input[type="search"] {
+    min-height: 44px;
+    border-radius: var(--radius-pill);
+    padding: 0.5em 1em;
+    font-size: 0.95rem;
+    box-shadow: var(--shadow-1);
+}
+.suchzeile input:focus {
+    outline: 2px solid var(--color-primary-light);
+    border-color: var(--color-primary);
+}
+
+.kachelwand {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--kachel-min), 1fr));
+    gap: 8px;
+}
+
+/* Die Kachel. Das wichtigste Bedienelement der ganzen App.
+
+   Quadratisch, damit die Wand ein ruhiges Raster bleibt, egal wie lang die
+   Namen sind. Der Name bekommt zwei Zeilen; was dann noch nicht passt, wird
+   abgeschnitten – „Getrockneter Rosmarin" ist auch als „Getrockneter
+   Rosma…" eindeutig, eine dreizeilige Kachel dagegen zerreißt das Raster. */
+.kachel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    aspect-ratio: 1 / 1;
+    padding: 8px 6px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-m);
+    box-shadow: var(--shadow-1);
+    text-align: center;
+    transition: transform 0.09s ease, background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.kachel:hover { border-color: #cfe3cf; background: var(--color-surface); }
+.kachel:active { transform: scale(0.94); }
+.kachel:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+.kachel-icon { font-size: 2.05rem; line-height: 1; }
+.kachel-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1.22;
+    color: var(--color-text);
+    hyphens: auto;
+}
+
+/* Schon auf der Liste: grüne Fläche, grüner Rand, ein Haken in der Ecke.
+   Ein weiterer Tipp nimmt sie wieder runter – dieselbe Kachel, beide
+   Richtungen. */
+.kachel.ist-drauf {
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+.kachel-marke {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.7rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.kachel.ist-drauf .kachel-marke { display: flex; }
+
+@keyframes foxi-kachel-puls {
+    0%   { transform: scale(0.94); }
+    55%  { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+.kachel.puls { animation: foxi-kachel-puls 0.28s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+    .kachel.puls { animation: none; }
+}
+
+.katalog-hinweis {
+    margin: 20px 2px;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Mehr
+   ──────────────────────────────────────────────────────────────────────── */
+
+.karte {
+    margin: 0 0 12px;
+    padding: 16px 16px 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-1);
+}
+.karte h2 {
+    margin: 0 0 8px;
+    font-size: 0.98rem;
+    color: var(--color-text);
+    text-transform: none;
+    letter-spacing: 0;
+}
+.karte p { margin: 0 0 10px; color: var(--color-text-muted); font-size: 0.88rem; line-height: 1.5; }
+.karte p:last-child { margin-bottom: 0; }
+.karte-knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+.karte-knoepfe button { min-height: 44px; }
+
+.fusszeile {
+    margin: 18px 2px 0;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Untere Leiste
+   ──────────────────────────────────────────────────────────────────────── */
+
+.tableiste {
+    grid-row: 3;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    padding: 5px 6px calc(5px + env(safe-area-inset-bottom));
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -1px 3px rgba(15, 23, 42, 0.06);
+    z-index: 20;
+}
+.tab {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: calc(var(--tableiste-height) - 12px);
+    border: none;
+    border-radius: var(--radius-m);
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    transition: background 0.14s, color 0.14s;
+}
+.tab .tab-icon { font-size: 1.25rem; line-height: 1; }
+.tab:hover:not(.active) { background: var(--color-surface-2); }
+.tab.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+.tab:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+
+.tab-zahl {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    margin-left: 6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+}
+.tab-zahl[hidden] { display: none; }
+
+/* ────────────────────────────────────────────────────────────────────────
+   Rückmeldung
+   ──────────────────────────────────────────────────────────────────────── */
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--tableiste-height) + env(safe-area-inset-bottom) + 14px);
+    transform: translateX(-50%) translateY(8px);
+    /* Feste Breite statt „so breit wie der Text": Sonst springt die Meldung
+       bei jedem Artikelnamen woanders hin, und mit einem Knopf daneben bricht
+       der Satz auf zwei Zeilen. */
+    width: calc(100% - 24px);
+    max-width: 420px;
+    justify-content: space-between;
+    padding: 11px 18px;
+    background: #14301a;
+    color: #fff;
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-2);
+    font-size: 0.86rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 60;
+}
+.toast.sichtbar { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast[hidden] { display: none; }
+.toast button {
+    border: none;
+    background: transparent;
+    color: #a7e3ac;
+    font-weight: 700;
+    font-size: 0.84rem;
+    padding: 4px 2px;
+    white-space: nowrap;
+}
+.toast button:hover { background: transparent; color: #fff; }
+
+/* ────────────────────────────────────────────────────────────────────────
+   Größere Bildschirme
+
+   Foxi bleibt auch am Schreibtisch eine Handy-App: Der Inhalt wächst nicht
+   auf 1600 px mit, er wird nur mittig gestellt. Eine Einkaufsliste über die
+   volle Breite eines Monitors zu ziehen macht sie nicht besser lesbar.
+   ──────────────────────────────────────────────────────────────────────── */
+@media (min-width: 620px) {
+    :root { --kachel-min: 112px; }
+    .bereich > * { max-width: 760px; margin-left: auto; margin-right: auto; }
+    .bereich { padding: 0 20px 28px; }
+    .tableiste { padding-left: 20px; padding-right: 20px; }
+    .tab { max-width: 240px; margin: 0 auto; width: 100%; }
+}
+
+@media (min-width: 900px) {
+    .bereich > * { max-width: 860px; }
+}

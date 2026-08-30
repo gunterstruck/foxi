@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <!-- `viewport-fit=cover` zusammen mit den `safe-area`-Abständen in foxi.css:
+         Ohne beides steht die untere Leiste auf dem iPhone im Bereich des
+         Home-Balkens, und der unterste Knopf ist nur mit Glück zu treffen. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#3f9142">
+    <meta name="description" content="Foxi – Einkaufsliste für Haushalt, Familie und WG. Alle Daten bleiben auf dem Gerät.">
+    <meta name="color-scheme" content="light">
+
+    <!-- iOS: ohne diese beiden Zeilen startet die installierte App in einer
+         Safari-Hülle mit Adressleiste statt im Vollbild. -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Foxi">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+    <title>Foxi – Einkaufsliste</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/foxi.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="src/styles/stamm/variables.css">
+    <link rel="stylesheet" href="src/styles/farben.css">
+    <link rel="stylesheet" href="src/styles/stamm/base.css">
+    <link rel="stylesheet" href="src/styles/foxi.css">
+</head>
+<body>
+    <div id="app">
+        <!-- ══════════════════════════════════════════════════════════════
+             Kopfbereich – Marke links, Ansichtstiefe rechts.
+
+             Aufbau und Klassennamen sind aus TourFuchs übernommen
+             (`.topbar`, `.brand`, `.depth-switch.seg-toggle`, `.seg`), damit
+             die drei Anwendungen erkennbar aus derselben Werkstatt kommen.
+             Der Schalter steht bei Foxi im Kopf statt in einer Seitenleiste:
+             Foxi hat keine Seitenleiste, und der Schalter soll durchgehend
+             sichtbar sein.
+             ══════════════════════════════════════════════════════════════ -->
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-icon" aria-hidden="true">🦊</span>
+                <span class="brand-name">Foxi <em data-text="app.anspruch">Einkauf</em></span>
+            </div>
+            <div class="depth-switch seg-toggle" id="modus-schalter" role="group"
+                 data-titel="tiefe.hinweis" data-beschriftung="tiefe.beschriftung">
+                <button type="button" class="seg" data-modus="basis" data-text="tiefe.basis">🌱 Basis</button>
+                <button type="button" class="seg" data-modus="experte" data-text="tiefe.experte">🛠️ Experte</button>
+            </div>
+        </header>
+
+        <main id="buehne">
+            <!-- Bereich 1: die Liste ───────────────────────────────────── -->
+            <section id="bereich-liste" class="bereich" role="tabpanel" aria-labelledby="tab-liste">
+                <div class="bereich-kopf">
+                    <h1 data-text="liste.titel">Einkaufsliste</h1>
+                    <p class="bereich-zahl" id="liste-zahl" aria-live="polite"></p>
+                </div>
+                <div id="liste-inhalt"></div>
+            </section>
+
+            <!-- Bereich 2: der Katalog ──────────────────────────────────── -->
+            <section id="bereich-katalog" class="bereich" role="tabpanel" aria-labelledby="tab-katalog" hidden>
+                <div class="suchzeile">
+                    <input id="katalog-suche" type="search" autocomplete="off"
+                           enterkeyhint="search" spellcheck="false"
+                           data-platzhalter="katalog.suche" data-beschriftung="katalog.sucheBeschriftung">
+                </div>
+                <div id="katalog-inhalt"></div>
+            </section>
+
+            <!-- Bereich 3: mehr ─────────────────────────────────────────── -->
+            <section id="bereich-mehr" class="bereich" role="tabpanel" aria-labelledby="tab-mehr" hidden>
+                <div class="bereich-kopf">
+                    <h1 data-text="mehr.titel">Mehr</h1>
+                </div>
+                <div id="mehr-inhalt"></div>
+            </section>
+        </main>
+
+        <!-- Die untere Leiste, weil Foxi mit einer Hand im Laden bedient wird.
+             Drei Ziele, jedes über 60 px hoch – der Daumen trifft sie ohne
+             Hinsehen. -->
+        <nav class="tableiste" role="tablist" data-beschriftung="bereiche.beschriftung">
+            <button type="button" class="tab" id="tab-liste" data-bereich="liste" role="tab" aria-selected="true">
+                <span class="tab-icon" aria-hidden="true">📝</span>
+                <span class="tab-text" data-text="bereiche.liste">Liste</span>
+                <span class="tab-zahl" id="tab-liste-zahl" hidden>0</span>
+            </button>
+            <button type="button" class="tab" id="tab-katalog" data-bereich="katalog" role="tab" aria-selected="false">
+                <span class="tab-icon" aria-hidden="true">🧺</span>
+                <span class="tab-text" data-text="bereiche.katalog">Katalog</span>
+            </button>
+            <button type="button" class="tab" id="tab-mehr" data-bereich="mehr" role="tab" aria-selected="false">
+                <span class="tab-icon" aria-hidden="true">⋯</span>
+                <span class="tab-text" data-text="bereiche.mehr">Mehr</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Eine Rückmeldung nach jeder Handlung, immer an derselben Stelle über
+         der Leiste. Aus TourFuchs übernommen; dort heißt sie genauso. -->
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>

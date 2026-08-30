@@ -1,0 +1,38 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DIE GRENZSCHICHT
+
+   `stamm/variables.css` und `stamm/base.css` sind Zeile für Zeile aus
+   TourFuchs übernommen – so wie SoundFuchs es hält. Sobald man eine
+   Stamm-Datei bearbeitet, kann niemand mehr durch einen Vergleich feststellen,
+   ob der Stamm noch der Stamm ist. Alles, was Foxi anders macht, steht
+   deshalb hier und nur hier.
+
+   Foxi ändert genau vier Werte: den Leitton und den Untergrund.
+
+   Gemessen (WCAG-Kontrast gegen Weiß):
+     TourFuchs-Petrol #0d9488 → 3,74:1
+     Foxi-Blattgrün   #3f9142 → 3,93:1
+   Der Leitton ist also nicht schlechter als das Vorbild, sondern etwas
+   besser. Für Fließtext auf hellem Grund reicht das trotzdem nicht – dafür
+   gibt es `--color-primary-dark` (#2f6f34 → 6,10:1). Regel im Haus: gefüllte
+   Flächen und Pillen tragen `--color-primary`, Text und Links tragen
+   `--color-primary-dark`.
+
+   Der Untergrund bekommt einen Hauch Grün (#f7faf5 statt #f8fafc). Das ist
+   der ganze Unterschied zwischen „aus derselben Werkstatt" und „dasselbe
+   Programm": Die Form bleibt, der Grundton wechselt.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+    --color-primary: #3f9142;
+    --color-primary-dark: #2f6f34;
+    --color-primary-light: #dff2df;
+
+    --color-bg: #f7faf5;
+
+    /* Nur Foxi: die Fläche einer Kachel, die schon auf der Liste steht. */
+    --color-primary-soft: #eef8ee;
+
+    /* Der Kopfbereich ist etwas höher als im Stamm – er trägt zwei Zeilen
+       (Marke + Tiefenschalter) statt einer. Der Wert wird in `foxi.css`
+       gesetzt, nicht hier; hier stehen nur Farben. */
+}
