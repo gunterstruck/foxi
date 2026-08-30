@@ -112,6 +112,36 @@ weil ES-Module und Service Worker eine echte Herkunft (`origin`) verlangen –
 Veröffentlichen heißt: den Ordner auf einen beliebigen statischen Webspace
 kopieren. Kein Node, kein Build, kein Container.
 
+### Veröffentlichen auf Vercel
+
+Das Repository ist fertig eingerichtet – `vercel.json` liegt bei. In Vercel
+genügt **Add New… → Project → `gunterstruck/foxi` importieren → Deploy**.
+Nichts umstellen: Framework `Other`, Install- und Build-Command leer, Output
+Directory `.`; genau das steht in `vercel.json` und wird von dort gelesen.
+
+Danach baut jeder Push auf `main` automatisch neu.
+
+`vercel.json` setzt außerdem die Kopfzeilen, die zum Grundsatz gehören:
+
+- **`Content-Security-Policy: default-src 'self'`** – der eigentliche Punkt.
+  Foxi *behauptet* nicht nur, keine fremden Adressen aufzurufen; der Browser
+  lässt es gar nicht erst zu. Das geht nur, weil im Markup kein einziges
+  Inline-Skript und keine Inline-Formatierung steht.
+- **`Permissions-Policy`** schaltet Standort, Mikrofon, Kamera, USB,
+  Bluetooth und Bezahlschnittstellen ab. Foxi braucht nichts davon, und was
+  abgeschaltet ist, kann auch kein späterer Fehler versehentlich benutzen.
+- **`Referrer-Policy: no-referrer`**, `X-Content-Type-Options: nosniff`.
+- `sw.js`, `manifest.webmanifest` und alles unter `src/` gehen mit
+  `must-revalidate` heraus. Die Dateinamen tragen keine Prüfsumme – ein
+  langer Browser-Zwischenspeicher würde nach einer neuen Fassung alte
+  Dateien ausliefern, an denen der Service Worker nichts mehr ändern kann.
+
+Ein Hinweis zur Genauigkeit: `.vercelignore` wirkt nur beim Hochladen über
+die Vercel-CLI. Bei der Git-Anbindung liegt das ganze Repository im Build,
+und mit `outputDirectory: "."` sind `tools/`, `tests/` und `docs/` auch unter
+der Adresse erreichbar. Das ist kein Leck – dieselben Dateien liegen ohnehin
+öffentlich auf GitHub –, aber es ist erwähnenswert, statt es zu verschweigen.
+
 ### Prüfen
 
 ```bash

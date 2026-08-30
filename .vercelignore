@@ -1,0 +1,14 @@
+# Was nicht ausgeliefert wird.
+#
+# Foxi hat keinen Bauschritt: Was hier liegt, geht so auf den Webspace.
+# Umso wichtiger ist, dass nur das hochgeht, was die App im Browser
+# tatsächlich braucht – Werkzeuge, Tests und Bilder gehören ins Repository,
+# nicht in die Auslieferung.
+
+node_modules/
+tools/
+tests/
+docs/
+package.json
+package-lock.json
+README.md
