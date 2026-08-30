@@ -234,6 +234,31 @@ sich die lernende Sortierung – und später die Rhythmus-Erkennung.
 | Angebote und Preise von Händlern | Keine öffentlichen Schnittstellen; kommerzielle Anbieter kosten Geld und sind rechtlich heikel |
 | Konto, Login, Cloud-Sync | Widerspricht dem Grundsatz |
 
+### Warum Angebote trotzdem funktionieren – ohne sie einzubauen
+
+Der Verzicht auf Händlerpreise sieht nach einer Lücke aus. Er ist keine.
+
+Am 30.08.2026 hat ein KI-Agent auf Zuruf die aktuellen Lebensmittelangebote
+eines Discounters von dessen Angebotsseite gelesen: 178 Einträge aus 16
+Kategorien und drei Aktionszeiträumen, mit Aktionspreis, Grundpreis und
+Gebindegröße. Das dauerte Minuten und kostete Foxi keine einzige Zeile Code.
+
+Genau dafür gibt es den Klartext-Export. Die Liste geht als Text hinaus, ein
+Agent besorgt die Preise, der Mensch entscheidet. Foxi bleibt dabei, was es
+ist: eine App ohne Netzverbindung, die niemanden fragt und niemandem etwas
+erzählt.
+
+Und deshalb hängt an diesem Export **keine vorformulierte Frage**. Derselbe
+Textblock trägt „was ist davon gerade im Angebot", „was koche ich daraus" und
+„erklär mir Sardellenpaste". Eine mitgelieferte Frage würde all das auf einen
+Fall verengen und mit den Fähigkeiten der Modelle altern. Ein reiner
+Textblock wächst mit ihnen.
+
+Eine eingebaute Angebotsfunktion wäre in beide Richtungen der schlechtere
+Tausch: Sie bräuchte eine Netzverbindung, einen Anbieter und eine
+Rechtsprüfung – und sie wäre in dem Moment veraltet, in dem die Agenten einen
+Schritt weiter sind.
+
 ---
 
 ## Stand und was als Nächstes kommt
