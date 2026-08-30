@@ -1,0 +1,20 @@
+{
+  "name": "Foxi – Einkaufsliste",
+  "short_name": "Foxi",
+  "description": "Einkaufsliste für Haushalt, Familie und WG. Alle Daten bleiben auf dem Gerät.",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7faf5",
+  "theme_color": "#3f9142",
+  "categories": ["shopping", "lifestyle", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/foxi.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

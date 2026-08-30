@@ -1,0 +1,28 @@
+{
+  "name": "foxi",
+  "version": "0.1.0",
+  "description": "Foxi – Einkaufsliste für Haushalt, Familie und WG. PWA, alle Daten bleiben auf dem Gerät.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "node tools/server.mjs",
+    "start": "node tools/server.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "katalog": "node tools/katalog-bauen.mjs",
+    "icons": "node tools/icons-bauen.mjs"
+  },
+  "keywords": [
+    "einkaufsliste",
+    "pwa",
+    "offline",
+    "local-first",
+    "haushalt",
+    "indexeddb"
+  ],
+  "author": "Günter Struck",
+  "license": "MIT",
+  "devDependencies": {
+    "vitest": "^2.1.9"
+  }
+}

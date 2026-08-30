@@ -1,0 +1,131 @@
+/**
+ * Die Rechenregeln von Foxi – reine Funktionen, kein DOM, keine Datenbank.
+ *
+ * Alles, was man prüfen können muss, steht hier: die lernende Sortierung, die
+ * Gruppierung der Liste und der Klartext-Export. Die Oberfläche ruft diese
+ * Funktionen auf; die Tests rufen dieselben auf.
+ */
+
+export const TAG_MS = 24 * 60 * 60 * 1000;
+
+/** Halbwertszeit der Erinnerung. Ein Kauf von vor 30 Tagen zählt halb so viel
+ *  wie einer von heute, einer von vor 60 Tagen ein Viertel. Warum überhaupt
+ *  vergessen? Ohne Verfall gewinnt ewig, was man einmal einen Monat lang
+ *  täglich gekauft hat – und die Kachel steht noch oben, wenn das Kind längst
+ *  ausgezogen ist. */
+export const HALBWERTSZEIT_TAGE = 30;
+
+/**
+ * Wie present ist ein Artikel? Summe aller Käufe, jeder mit dem Alter
+ * abklingend. Kein Menüpunkt, keine Einstellung – die Zahl entsteht beim
+ * Abhaken von selbst.
+ */
+export function kaufScore(letzteKaeufe, jetzt = Date.now(), halbwertszeitTage = HALBWERTSZEIT_TAGE) {
+    if (!Array.isArray(letzteKaeufe) || letzteKaeufe.length === 0) return 0;
+    let summe = 0;
+    for (const zeitpunkt of letzteKaeufe) {
+        const alterTage = Math.max(0, (jetzt - zeitpunkt) / TAG_MS);
+        summe += Math.pow(0.5, alterTage / halbwertszeitTage);
+    }
+    return summe;
+}
+
+/** Sortierschlüssel: erst der Score (absteigend), bei Gleichstand der Name.
+ *  Der Namensvergleich ist die stille Hälfte: Ohne ihn wäre die Reihenfolge
+ *  frisch installierter Kataloge von der Datenbank abhängig statt vom Alphabet. */
+export function vergleicheArtikel(a, b, jetzt = Date.now()) {
+    const diff = kaufScore(b.letzteKaeufe, jetzt) - kaufScore(a.letzteKaeufe, jetzt);
+    if (Math.abs(diff) > 1e-9) return diff;
+    return a.name.localeCompare(b.name, 'de');
+}
+
+/** Der Katalog einer Kategorie, gelernt sortiert. */
+export function sortiereArtikel(artikel, jetzt = Date.now()) {
+    return [...artikel].sort((a, b) => vergleicheArtikel(a, b, jetzt));
+}
+
+/**
+ * Die Kachelreihe ganz oben: was dieser Haushalt tatsächlich braucht.
+ * Sie erscheint erst, wenn es etwas zu zeigen gibt – vor dem ersten Einkauf
+ * wäre sie eine leere Behauptung.
+ */
+export function oftGebraucht(artikel, anzahl = 12, jetzt = Date.now()) {
+    return artikel
+        .filter((a) => kaufScore(a.letzteKaeufe, jetzt) > 0)
+        .sort((a, b) => vergleicheArtikel(a, b, jetzt))
+        .slice(0, anzahl);
+}
+
+/** Suche: Anfang eines Wortes zählt mehr als die Mitte, damit „Milch" bei
+ *  „mil" vor „Mandelmilch" steht. */
+export function sucheArtikel(artikel, begriff, jetzt = Date.now()) {
+    const nadel = normalisiere(begriff);
+    if (!nadel) return [];
+    const treffer = [];
+    for (const a of artikel) {
+        const heu = normalisiere(a.name);
+        const stelle = heu.indexOf(nadel);
+        if (stelle < 0) continue;
+        const wortanfang = stelle === 0 || heu[stelle - 1] === ' ' || heu[stelle - 1] === '-';
+        treffer.push({ artikel: a, rang: stelle === 0 ? 0 : wortanfang ? 1 : 2 });
+    }
+    treffer.sort((x, y) => x.rang - y.rang || vergleicheArtikel(x.artikel, y.artikel, jetzt));
+    return treffer.map((x) => x.artikel);
+}
+
+export function normalisiere(text) {
+    return String(text || '')
+        .toLowerCase()
+        .replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')
+        .replace(/é|è|ê/g, 'e')
+        .trim();
+}
+
+/**
+ * Die Liste, gruppiert nach Kategorie in der eingestellten Reihenfolge.
+ * Leere Kategorien fallen weg – die Liste zeigt den Laden, nicht das Regal-
+ * verzeichnis.
+ */
+export function gruppiereListe(eintraege, artikelNachId, kategorien) {
+    const reihenfolge = [...kategorien].sort((a, b) => a.position - b.position);
+    const gruppen = new Map(reihenfolge.map((k) => [k.id, { kategorie: k, eintraege: [] }]));
+    const ohneKategorie = { kategorie: { id: '_sonstiges', name: 'Sonstiges', icon: '🛒', position: 9999 }, eintraege: [] };
+
+    for (const eintrag of eintraege) {
+        const artikel = artikelNachId.get(eintrag.artikelId);
+        if (!artikel) continue;
+        const gruppe = gruppen.get(artikel.kategorieId) || ohneKategorie;
+        gruppe.eintraege.push({ ...eintrag, artikel });
+    }
+
+    const ergebnis = [...gruppen.values()];
+    if (ohneKategorie.eintraege.length) ergebnis.push(ohneKategorie);
+    for (const gruppe of ergebnis) {
+        gruppe.eintraege.sort((a, b) => a.artikel.name.localeCompare(b.artikel.name, 'de'));
+    }
+    return ergebnis.filter((g) => g.eintraege.length > 0);
+}
+
+/**
+ * Der Klartext-Export („KI-Brücke").
+ *
+ * Bewusst ohne angehängte Frage. Wer den Text irgendwo einfügt, schreibt
+ * selbst dazu, was er wissen will – „was koche ich daraus", „was fehlt noch",
+ * „erklär mir Sardellenpaste". So altert die Funktion nicht mit den Modellen.
+ */
+export function alsKlartext(gruppen, datum = new Date()) {
+    const kopf = `Einkaufsliste (${datumDeutsch(datum)})`;
+    const zeilen = gruppen.map((gruppe) => {
+        const teile = gruppe.eintraege.map((e) => {
+            const zusatz = [e.menge, e.notiz].filter(Boolean).join(', ');
+            return zusatz ? `${e.artikel.name} (${zusatz})` : e.artikel.name;
+        });
+        return `${gruppe.kategorie.name}: ${teile.join(', ')}`;
+    });
+    return [kopf, '', ...zeilen].join('\n');
+}
+
+export function datumDeutsch(datum = new Date()) {
+    const zz = (n) => String(n).padStart(2, '0');
+    return `${zz(datum.getDate())}.${zz(datum.getMonth() + 1)}.${datum.getFullYear()}`;
+}

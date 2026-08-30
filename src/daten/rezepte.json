@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "hinweis": "Beispielrezepte für den Erststart. Ein Rezept ist nichts weiter als ein Name und eine Artikelliste – kein Web-Import, keine Bilder, keine Datenbank.",
+  "rezepte": [
+    {
+      "id": "rezept-spaghetti-bolognese",
+      "name": "Spaghetti Bolognese",
+      "artikelIds": ["spaghetti", "rinderhackfleisch", "passierte-tomaten", "tomatenmark", "zwiebeln", "knoblauch", "karotten", "parmesan", "olivenoel", "oregano"]
+    },
+    {
+      "id": "rezept-linsensuppe",
+      "name": "Linsensuppe",
+      "artikelIds": ["linsen", "karotten", "kartoffeln", "lauch", "staudensellerie", "zwiebeln", "gemuesebruehe", "lorbeerblaetter", "essig"]
+    },
+    {
+      "id": "rezept-fruehstueck",
+      "name": "Frühstück für alle",
+      "artikelIds": ["broetchen", "butter", "marmelade", "honig", "eier", "kaffee", "milch", "orangensaft", "gouda", "kochschinken"]
+    },
+    {
+      "id": "rezept-ofengemuese",
+      "name": "Ofengemüse mit Feta",
+      "artikelIds": ["zucchini", "paprika", "aubergine", "cherrytomaten", "rote-zwiebeln", "feta", "olivenoel", "getrockneter-thymian", "salz", "pfeffer"]
+    },
+    {
+      "id": "rezept-kartoffelsalat",
+      "name": "Kartoffelsalat",
+      "artikelIds": ["kartoffeln", "zwiebeln", "gewuerzgurken", "mayonnaise", "senf", "essig", "schnittlauch", "wiener-wuerstchen"]
+    },
+    {
+      "id": "rezept-grundvorrat",
+      "name": "Grundvorrat auffüllen",
+      "artikelIds": ["salz", "pfeffer", "mehl", "zucker", "olivenoel", "reis", "spaghetti", "tomaten-aus-der-dose", "kaffee", "toilettenpapier", "spuelmittel"]
+    }
+  ]
+}

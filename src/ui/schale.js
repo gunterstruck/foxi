@@ -1,0 +1,165 @@
+/**
+ * Die Schale: Kopfbereich, Bereichswechsel, Rückmeldung.
+ *
+ * Alles, was um die drei Bildschirme herum steht und immer da ist.
+ */
+
+import { t } from '../texte.js';
+import { istExperte, modusSetzen, offeneEintraege, beiAenderung } from '../zustand.js';
+
+let aktuellerBereich = 'liste';
+let toastZeitgeber = null;
+const bereichsZuhoerer = new Set();
+
+/**
+ * Texte einsetzen. Das Markup trägt Kennungen (`data-text="liste.titel"`),
+ * nicht die Sätze selbst – so bleibt `texte.js` der einzige Ort, an dem
+ * Sprache steht, und eine spätere Übersetzung braucht keine Suche durchs
+ * Markup.
+ */
+export function texteEinsetzen(wurzel = document) {
+    for (const el of wurzel.querySelectorAll('[data-text]')) {
+        el.textContent = t(el.dataset.text);
+    }
+    for (const el of wurzel.querySelectorAll('[data-platzhalter]')) {
+        el.setAttribute('placeholder', t(el.dataset.platzhalter));
+    }
+    for (const el of wurzel.querySelectorAll('[data-beschriftung]')) {
+        el.setAttribute('aria-label', t(el.dataset.beschriftung));
+    }
+    for (const el of wurzel.querySelectorAll('[data-titel]')) {
+        el.setAttribute('title', t(el.dataset.titel));
+    }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Bereiche
+   ──────────────────────────────────────────────────────────────────────── */
+
+/** Wird gerufen, bevor ein Bereich sichtbar wird – dort zeichnet `app.js`
+ *  nach, was in der Zwischenzeit veraltet ist. */
+export function beiBereichswechsel(rueckruf) {
+    bereichsZuhoerer.add(rueckruf);
+    return () => bereichsZuhoerer.delete(rueckruf);
+}
+
+export function zeigeBereich(name) {
+    aktuellerBereich = name;
+    for (const rueckruf of bereichsZuhoerer) rueckruf(name);
+    for (const abschnitt of document.querySelectorAll('.bereich')) {
+        abschnitt.hidden = abschnitt.id !== `bereich-${name}`;
+    }
+    for (const tab of document.querySelectorAll('.tab')) {
+        const aktiv = tab.dataset.bereich === name;
+        tab.classList.toggle('active', aktiv);
+        tab.setAttribute('aria-selected', aktiv ? 'true' : 'false');
+    }
+    /* Beim Wechsel oben anfangen. Wer aus dem Katalog zur Liste geht, will die
+       Liste sehen und nicht die Stelle, an der er vorhin stehen geblieben ist. */
+    const sichtbar = document.getElementById(`bereich-${name}`);
+    if (sichtbar) sichtbar.scrollTop = 0;
+}
+
+export function aktiverBereich() {
+    return aktuellerBereich;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Rückmeldung
+   ──────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Ein Satz über der unteren Leiste, optional mit einer einzigen Handlung.
+ * Zwei Sekunden ohne Handlung, vier mit – lange genug zum Lesen, kurz genug,
+ * um nicht im Weg zu stehen.
+ */
+export function melde(text, handlung = null) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    clearTimeout(toastZeitgeber);
+    toast.textContent = '';
+
+    const satz = document.createElement('span');
+    satz.textContent = text;
+    toast.append(satz);
+
+    if (handlung) {
+        const knopf = document.createElement('button');
+        knopf.type = 'button';
+        knopf.textContent = handlung.text;
+        knopf.addEventListener('click', () => {
+            versteckeToast();
+            handlung.tun();
+        });
+        toast.append(knopf);
+    }
+
+    toast.hidden = false;
+    requestAnimationFrame(() => toast.classList.add('sichtbar'));
+    toastZeitgeber = setTimeout(versteckeToast, handlung ? 4000 : 2000);
+}
+
+function versteckeToast() {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    clearTimeout(toastZeitgeber);
+    toast.classList.remove('sichtbar');
+    setTimeout(() => { if (!toast.classList.contains('sichtbar')) toast.hidden = true; }, 200);
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Tiefe
+   ──────────────────────────────────────────────────────────────────────── */
+
+export function tiefeAnzeigen() {
+    const experte = istExperte();
+    document.body.classList.toggle('modus-experte', experte);
+    document.body.classList.toggle('modus-basis', !experte);
+    for (const seg of document.querySelectorAll('#modus-schalter .seg')) {
+        const aktiv = (seg.dataset.modus === 'experte') === experte;
+        seg.classList.toggle('active', aktiv);
+        seg.setAttribute('aria-pressed', aktiv ? 'true' : 'false');
+    }
+}
+
+/** Die Zahl auf dem Reiter „Liste": offene Artikel, sonst nichts. */
+export function zaehlerAnzeigen() {
+    const offen = offeneEintraege().length;
+    const zahl = document.getElementById('tab-liste-zahl');
+    if (zahl) {
+        zahl.textContent = String(offen);
+        zahl.hidden = offen === 0;
+    }
+    const kopfzahl = document.getElementById('liste-zahl');
+    if (kopfzahl) kopfzahl.textContent = offen > 0 ? t('liste.offeneAnzahl', offen) : '';
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Verdrahtung
+   ──────────────────────────────────────────────────────────────────────── */
+
+export function schaleVerdrahten() {
+    texteEinsetzen();
+
+    for (const tab of document.querySelectorAll('.tab')) {
+        tab.addEventListener('click', () => zeigeBereich(tab.dataset.bereich));
+    }
+
+    for (const seg of document.querySelectorAll('#modus-schalter .seg')) {
+        seg.addEventListener('click', async () => {
+            const gewuenscht = seg.dataset.modus;
+            if ((gewuenscht === 'experte') === istExperte()) return;
+            await modusSetzen(gewuenscht);
+            melde(t(gewuenscht === 'experte' ? 'tiefe.gewechseltZuExperte' : 'tiefe.gewechseltZuBasis'));
+        });
+    }
+
+    beiAenderung(() => {
+        tiefeAnzeigen();
+        zaehlerAnzeigen();
+    });
+
+    tiefeAnzeigen();
+    zaehlerAnzeigen();
+}

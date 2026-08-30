@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Foxi">
+    <title>Foxi</title>
+    <!--
+      Dieselbe Zeichnung, aber randlos und kleiner: Android schneidet
+      „maskable"-Zeichen je nach Hersteller zum Kreis, zur Träne oder zum
+      abgerundeten Quadrat. Sicher ist nur der Kreis mit 80 % Durchmesser –
+      der Fuchs sitzt deshalb auf 62 % der Fläche in der Mitte.
+    -->
+    <defs>
+        <linearGradient id="grund" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#57ab58"/>
+            <stop offset="1" stop-color="#3f9142"/>
+        </linearGradient>
+    </defs>
+
+    <rect width="512" height="512" fill="url(#grund)"/>
+
+    <g transform="translate(256 262) scale(0.66) translate(-256 -256)"
+       stroke-linejoin="round" stroke-linecap="round">
+        <path d="M136 214 L158 116 L232 176 Z" fill="#e8843c" stroke="#e8843c" stroke-width="34"/>
+        <path d="M376 214 L354 116 L280 176 Z" fill="#e8843c" stroke="#e8843c" stroke-width="34"/>
+        <path d="M163 196 L175 152 L212 182 Z" fill="#f6c9a2" stroke="#f6c9a2" stroke-width="12"/>
+        <path d="M349 196 L337 152 L300 182 Z" fill="#f6c9a2" stroke="#f6c9a2" stroke-width="12"/>
+        <path d="M148 214 L364 214 L256 392 Z" fill="#e8843c" stroke="#e8843c" stroke-width="44"/>
+        <path d="M206 306 L306 306 L256 376 Z" fill="#fdf6ee" stroke="#fdf6ee" stroke-width="26"/>
+        <circle cx="206" cy="258" r="17" fill="#2f2118"/>
+        <circle cx="306" cy="258" r="17" fill="#2f2118"/>
+        <circle cx="256" cy="356" r="16" fill="#2f2118"/>
+    </g>
+</svg>
