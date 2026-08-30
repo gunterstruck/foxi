@@ -13,9 +13,10 @@
 import { t } from '../texte.js';
 import { sortiereArtikel, oftGebraucht, sucheArtikel } from '../logik.js';
 import {
-    zustand, alleArtikel, aufDerListe, umschalten, artikelAnlegen, aufListeSetzen
+    zustand, alleArtikel, aufDerListe, umschalten, artikelAnlegen, aufListeSetzen, istExperte
 } from '../zustand.js';
 import { melde } from './schale.js';
+import { kopiereArtikel } from './teilen.js';
 
 let behaelter = null;
 let suchfeld = null;
@@ -152,7 +153,51 @@ function kachel(artikel) {
         melde(jetztDrauf ? t('katalog.hinzugefuegt', artikel.name) : t('katalog.entfernt', artikel.name));
     });
 
+    langesDrueckenVerdrahten(knopf, artikel);
     return knopf;
+}
+
+/**
+ * Langes Drücken auf eine Kachel kopiert den Artikelnamen – für Fragen zu
+ * einzelnen Produkten („erklär mir Sardellenpaste").
+ *
+ * Der Name geht nackt in die Zwischenablage, ohne mitgelieferte Frage. Was
+ * jemand wissen will, weiß er selbst; eine vorformulierte Frage würde mit
+ * den Fähigkeiten der Modelle altern.
+ *
+ * Nur im Expertenmodus: Im Basismodus darf eine Kachel genau eine Sache tun.
+ */
+function langesDrueckenVerdrahten(knopf, artikel) {
+    let zeitgeber = null;
+    let ausgeloest = false;
+
+    const abbrechen = () => { clearTimeout(zeitgeber); zeitgeber = null; };
+
+    knopf.addEventListener('pointerdown', () => {
+        if (!istExperte()) return;
+        ausgeloest = false;
+        zeitgeber = setTimeout(async () => {
+            ausgeloest = true;
+            /* Kurz rütteln, wo das Gerät es kann: Beim langen Drücken gibt es
+               keine Bewegung auf dem Schirm, an der man den Auslösepunkt
+               ablesen könnte. */
+            navigator.vibrate?.(12);
+            await kopiereArtikel(artikel);
+        }, 500);
+    });
+
+    for (const art of ['pointerup', 'pointercancel', 'pointerleave', 'pointermove']) {
+        knopf.addEventListener(art, abbrechen);
+    }
+
+    /* Nach dem langen Drücken darf der Finger beim Loslassen nicht auch noch
+       den Artikel auf die Liste legen. */
+    knopf.addEventListener('click', (ereignis) => {
+        if (!ausgeloest) return;
+        ausgeloest = false;
+        ereignis.preventDefault();
+        ereignis.stopImmediatePropagation();
+    }, true);
 }
 
 /**

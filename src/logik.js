@@ -129,3 +129,102 @@ export function datumDeutsch(datum = new Date()) {
     const zz = (n) => String(n).padStart(2, '0');
     return `${zz(datum.getDate())}.${zz(datum.getMonth() + 1)}.${datum.getFullYear()}`;
 }
+
+export function datumFuerDateiname(datum = new Date()) {
+    const zz = (n) => String(n).padStart(2, '0');
+    return `${datum.getFullYear()}-${zz(datum.getMonth() + 1)}-${zz(datum.getDate())}`;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Teilen als Datei
+
+   Kein Server, kein Konto, kein Sync-Protokoll: Die Liste wird zu einer
+   Datei, und der Mensch entscheidet, wohin sie geht. Die Endung ist `.json`
+   und nichts Eigenes – Messenger zicken bei exotischen Endungen, und eine
+   Datei, die WhatsApp nicht durchlässt, ist keine geteilte Liste.
+
+   Jeder Eintrag trägt alles mit, was das Gegenüber zum Anzeigen braucht:
+   Name, Kategorie und Zeichen. So funktioniert die Datei auch dann, wenn
+   dort ein selbst angelegter Artikel unbekannt ist.
+
+   Was die Datei NICHT enthält: `letzteKaeufe`. Die Kaufhistorie ist das
+   Gedächtnis eines Haushalts, keine Beilage zu einer Einkaufsliste – wer
+   eine Liste weitergibt, gibt nicht mit, wie oft er Bier kauft.
+   ──────────────────────────────────────────────────────────────────────── */
+
+export const DATEI_TYP = 'foxi-liste';
+export const DATEI_VERSION = 1;
+
+export function alsAustauschdatei(eintraege, artikelNachId, kategorienNachId, datum = new Date()) {
+    return {
+        typ: DATEI_TYP,
+        version: DATEI_VERSION,
+        erzeugt: datum.toISOString(),
+        artikel: eintraege.flatMap((eintrag) => {
+            const artikel = artikelNachId.get(eintrag.artikelId);
+            if (!artikel) return [];
+            return [{
+                id: artikel.id,
+                name: artikel.name,
+                kategorieId: artikel.kategorieId,
+                kategorieName: kategorienNachId.get(artikel.kategorieId)?.name || '',
+                icon: artikel.icon,
+                menge: eintrag.menge || '',
+                notiz: eintrag.notiz || ''
+            }];
+        })
+    };
+}
+
+/** Ist das überhaupt eine Foxi-Datei? Gibt einen Grund zurück statt eines
+ *  Wahrheitswerts – „ungültig" allein hilft niemandem weiter. */
+export function pruefeAustauschdatei(daten) {
+    if (!daten || typeof daten !== 'object') return { gueltig: false, grund: 'kaputt' };
+    if (daten.typ !== DATEI_TYP) return { gueltig: false, grund: 'fremd' };
+    if (!Array.isArray(daten.artikel)) return { gueltig: false, grund: 'kaputt' };
+    if (Number(daten.version) > DATEI_VERSION) return { gueltig: false, grund: 'zuNeu' };
+    return { gueltig: true, grund: null };
+}
+
+/**
+ * Was würde ein Import ändern? Drei Töpfe – neu, unverändert, abweichend.
+ *
+ * Der dritte ist der Grund, warum es überhaupt einen Dialog gibt: „Milch" auf
+ * beiden Listen, hier ohne Menge, dort mit „2 Liter". Stillschweigend
+ * überschreiben wäre Datenverlust; stillschweigend verwerfen wäre der Grund,
+ * warum das Teilen dann niemand benutzt.
+ */
+export function vergleicheImport(fremdeArtikel, eigeneListe) {
+    const neu = [];
+    const doppelt = [];
+    const abweichend = [];
+
+    for (const fremd of fremdeArtikel) {
+        const eigen = eigeneListe.get(fremd.id);
+        if (!eigen) { neu.push(fremd); continue; }
+        const gleicheMenge = (eigen.menge || '') === (fremd.menge || '');
+        const gleicheNotiz = (eigen.notiz || '') === (fremd.notiz || '');
+        if (gleicheMenge && gleicheNotiz) doppelt.push(fremd);
+        else abweichend.push(fremd);
+    }
+
+    return { neu, doppelt, abweichend };
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Statistik
+   ──────────────────────────────────────────────────────────────────────── */
+
+/** Was kauft dieser Haushalt wie oft? Rohe Zählung ohne Verfall – hier lautet
+ *  die Frage „wie oft insgesamt", nicht „wie present gerade". */
+export function kaufStatistik(artikel, anzahl = 20) {
+    return artikel
+        .filter((a) => (a.letzteKaeufe || []).length > 0)
+        .map((a) => ({
+            artikel: a,
+            anzahl: a.letzteKaeufe.length,
+            zuletzt: Math.max(...a.letzteKaeufe)
+        }))
+        .sort((x, y) => y.anzahl - x.anzahl || y.zuletzt - x.zuletzt)
+        .slice(0, anzahl);
+}

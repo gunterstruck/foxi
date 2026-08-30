@@ -88,6 +88,79 @@ const DE = {
         lizenz: 'MIT-Lizenz · frei zu benutzen und weiterzugeben'
     },
 
+    rezepte: {
+        titel: 'Rezepte',
+        erklaerung: 'Ein Tipp legt alle Zutaten auf einmal auf die Liste.',
+        leer: 'Noch keine Rezepte. Leg deine aktuelle Liste als Rezept ab.',
+        ausListe: 'Aktuelle Liste als Rezept sichern',
+        ausListeLeer: 'Dafür muss etwas auf der Liste stehen.',
+        nameFrage: 'Wie soll das Rezept heißen?',
+        namePlatzhalter: 'z. B. Sonntagsfrühstück',
+        gesichert: (name) => `„${name}" gesichert`,
+        uebertragen: (name, n) =>
+            n === 0 ? `Alles aus „${name}" steht schon auf der Liste`
+                : n === 1 ? `1 Zutat aus „${name}" auf die Liste`
+                    : `${n} Zutaten aus „${name}" auf die Liste`,
+        loeschen: 'Löschen',
+        loeschenFrage: (name) => `Rezept „${name}" löschen?`,
+        geloescht: (name) => `„${name}" gelöscht`,
+        zutaten: (n) => (n === 1 ? '1 Zutat' : `${n} Zutaten`)
+    },
+
+    kategorien: {
+        titel: 'Reihenfolge im Laden',
+        erklaerung:
+            'Zieh die Kategorien in die Reihenfolge, in der du den Laden abläufst. ' +
+            'Die Liste sortiert sich danach.',
+        griff: (name) => `${name} verschieben`,
+        hoch: 'Nach oben',
+        runter: 'Nach unten',
+        gespeichert: 'Reihenfolge gemerkt',
+        zuruecksetzen: 'Ursprüngliche Reihenfolge'
+    },
+
+    teilen: {
+        titel: 'Teilen und Sichern',
+        erklaerung:
+            'Foxi verschickt nichts von selbst. Die Liste wird zu einer Datei, ' +
+            'und du entscheidest, wohin sie geht.',
+        alsDatei: 'Liste als Datei teilen',
+        alsText: 'Liste als Text kopieren',
+        importieren: 'Datei einlesen',
+        dateiName: (datum) => `foxi-liste-${datum}.json`,
+        kopiert: 'Liste in der Zwischenablage',
+        kopiertArtikel: (name) => `„${name}" kopiert`,
+        geteilt: 'Geteilt',
+        abgebrochen: 'Nicht geteilt',
+        leerNichtsZuTeilen: 'Die Liste ist leer.',
+        geladen: 'Datei geladen',
+        keineFoxiDatei: 'Das ist keine Foxi-Datei.',
+        kaputteDatei: 'Die Datei lässt sich nicht lesen.',
+        langDrueckenHinweis: 'Lange auf eine Kachel drücken kopiert den Artikelnamen.'
+    },
+
+    zusammenfuehren: {
+        titel: 'Was soll übernommen werden?',
+        neu: (n) => (n === 1 ? '1 neuer Artikel' : `${n} neue Artikel`),
+        doppelt: (n) => (n === 1 ? '1 Artikel ist schon da' : `${n} Artikel sind schon da`),
+        ueberschrieben: (n) =>
+            n === 1 ? '1 Artikel bekommt eine andere Menge' : `${n} Artikel bekommen andere Mengen`,
+        nichtsNeues: 'Nichts Neues in der Datei.',
+        nurNeue: 'Nur die neuen übernehmen',
+        allesUebernehmen: 'Alles übernehmen (Mengen überschreiben)',
+        uebernommen: (n) => (n === 1 ? '1 Artikel übernommen' : `${n} Artikel übernommen`),
+        unbekannteArtikel: (n) =>
+            n === 1 ? '1 unbekannter Artikel wird angelegt' : `${n} unbekannte Artikel werden angelegt`
+    },
+
+    statistik: {
+        titel: 'Was ihr oft kauft',
+        erklaerung: 'Gezählt wird beim Abhaken. Die Zahlen bleiben auf diesem Gerät.',
+        leer: 'Noch nichts abgehakt.',
+        malGekauft: (n) => (n === 1 ? '1×' : `${n}×`),
+        seit: (datum) => `zuletzt am ${datum}`
+    },
+
     menge: {
         beschriftung: 'Menge',
         platzhalter: 'z. B. 1 kg',

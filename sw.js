@@ -11,7 +11,7 @@
  * eine neue `CACHE`-Nummer herein.
  */
 
-const CACHE = 'foxi-v0.1.0';
+const CACHE = 'foxi-v0.2.0';
 
 const SCHALE = [
     './',
@@ -31,6 +31,8 @@ const SCHALE = [
     'src/ui/liste.js',
     'src/ui/katalog.js',
     'src/ui/mehr.js',
+    'src/ui/dialog.js',
+    'src/ui/teilen.js',
     'src/daten/katalog.json',
     'src/daten/rezepte.json',
     'icons/foxi.svg',

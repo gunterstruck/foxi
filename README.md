@@ -4,7 +4,7 @@
 ![Kein Konto](https://img.shields.io/badge/Kein%20Konto-kein%20Login%2C%20kein%20Backend-2f6f34)
 ![PWA](https://img.shields.io/badge/PWA-offlinef%C3%A4hig-purple)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-0.1.0-orange)
+![Version](https://img.shields.io/badge/Version-0.2.0-orange)
 
 **Tippen statt Tippen.**
 
@@ -59,9 +59,14 @@ Jeder Artikel trägt eine Kategorie. Die Liste gruppiert danach, in der
 Reihenfolge eines durchschnittlichen Supermarkt-Laufwegs – man geht den Laden
 einmal ab statt viermal. Die Reihenfolge wird im Expertenmodus anpassbar.
 
-### 3. Rezepte und Vorlagen *(gebaut: Daten, offen: Oberfläche)*
+### 3. Rezepte und Vorlagen
 Ein Rezept ist ein Name und eine Artikelliste. Ein Tipp überträgt alle Zutaten
 auf einmal. Kein Web-Import, keine Rezeptdatenbank, keine Bilder.
+
+Eigene Rezepte entstehen aus dem, was gerade auf der Liste steht – das ist der
+einzige Weg, und er ist Absicht. Ein eigener Zusammenbau-Bildschirm
+(„Zutaten auswählen") wäre ein zweiter Katalog mit zweiter Suche, für eine
+Aufgabe, die man einmal im Monat hat.
 
 ### 4. Der lernende Katalog
 Bei jedem Abhaken wandert ein Zeitstempel in `letzteKaeufe`. Daraus entsteht
@@ -84,10 +89,11 @@ sichtbare Komplexität.
 |---|---|---|
 | Liste, Katalog, Abhaken | ✅ | ✅ |
 | Mengen und Notizen | – | ✅ |
-| Rezepte | – | geplant |
-| Kategorie-Reihenfolge ziehen | – | geplant |
-| Teilen und Export | – | geplant |
-| Statistik | – | geplant |
+| Rezepte | – | ✅ |
+| Kategorie-Reihenfolge ziehen | – | ✅ |
+| Teilen, Export und Import | – | ✅ |
+| Briefing-Export als Klartext | – | ✅ |
+| Statistik | – | ✅ |
 
 Der Wechsel ist jederzeit und **verlustfrei** möglich, und zwar wörtlich: Er
 berührt genau einen Wert in den Einstellungen. Eine Menge, die im
@@ -145,16 +151,22 @@ der Adresse erreichbar. Das ist kein Leck – dieselben Dateien liegen ohnehin
 ### Prüfen
 
 ```bash
-npm install && npm test          # 26 Unit-Tests (Sortierung, Gruppierung, Export, Daten)
+npm install && npm test          # 42 Unit-Tests (Sortierung, Suche, Gruppierung, Export, Import, Daten)
 
 npm i --no-save playwright && npx playwright install chromium
 node tools/durchlauf.mjs         # Prüfstrecke im echten Browser + Bilder
 ```
 
-Die Prüfstrecke fährt die Abnahmekriterien ab, die man mit Unit-Tests nicht
-erreicht: die Zwei-Tipp-Regel, zehn simulierte Einkäufe, den verlustfreien
-Moduswechsel – und sie schreibt jede Netzwerkanfrage mit. Eine fremde Adresse
-lässt den Lauf durchfallen.
+Die Prüfstrecke (29 Prüfungen) fährt die Abnahmekriterien ab, die man mit
+Unit-Tests nicht erreicht: die Zwei-Tipp-Regel, zehn simulierte Einkäufe, den
+verlustfreien Moduswechsel, Rezepte, das Ziehen der Kategorien mit Zeiger und
+mit Tastatur, den Briefing-Export aus der echten Zwischenablage und einen
+vollständigen Datei-Import samt Zusammenführungs-Dialog.
+
+Zwei Tore laufen dabei ständig mit: Sie schreibt **jede Netzwerkanfrage** mit –
+eine fremde Adresse lässt den Lauf durchfallen –, und der
+Entwicklungsserver schickt **dieselbe Content-Security-Policy wie die
+Auslieferung**, sodass ein Verstoß hier auffällt statt erst im Betrieb.
 
 ---
 
@@ -177,6 +189,8 @@ src/
   ui/liste.js              Bildschirm 1
   ui/katalog.js            Bildschirm 2
   ui/mehr.js               Bildschirm 3
+  ui/teilen.js             Datei, Klartext, Import
+  ui/dialog.js             der eine Dialog, den es braucht
   styles/stamm/            Zeile für Zeile aus TourFuchs übernommen
   styles/farben.css        die Grenzschicht: was Foxi anders macht
   styles/foxi.css          Kachelwand, Liste, untere Leiste
@@ -224,14 +238,15 @@ sich die lernende Sortierung – und später die Rhythmus-Erkennung.
 
 ## Stand und was als Nächstes kommt
 
-**Gebaut (v0.1.0):** Gerüst, Basismodus vollständig, lernender Katalog,
-Kategorie-Gruppierung, Suche, eigene Artikel, Mengen und Notizen im
-Expertenmodus, Offlinebetrieb, Installierbarkeit.
+**Gebaut (v0.2.0):** Version 1 ist inhaltlich vollständig – Basismodus,
+lernender Katalog, Rezepte, Kategorie-Reihenfolge per Ziehen, Teilen als
+Datei mit Zusammenführung beim Import, Briefing-Export, Statistik,
+Offlinebetrieb, Installierbarkeit.
 
-**Als Nächstes:** Rezepte-Oberfläche, Kategorie-Reihenfolge per
-Drag-and-drop, Teilen als `.json` über `navigator.share` samt
-Zusammenführungs-Dialog beim Import, der Briefing-Export als Klartext
-(`alsKlartext()` in `logik.js` steht schon und ist getestet), Statistik.
+**Als Nächstes:** auf echten Geräten fahren. Die Prüfstrecke läuft in
+Chromium; die Emoji stammen aber aus der Schrift des Betriebssystems, und
+`navigator.share` mit Dateien verhält sich auf iOS anders als am
+Schreibtisch. Was hier grün ist, ist geprüft – aber nicht auf einem iPhone.
 
 **Später:** Ladenzuordnung ohne GPS, optionale Preise, Rhythmus-Erkennung aus
 `letzteKaeufe`, Supermarkt-Standorte aus OpenStreetMap (einmalig für eine
@@ -246,7 +261,7 @@ Region geladen, danach lokal).
 | 3 | Kein einziger ausgehender Request im Normalbetrieb | ✅ geprüft in `tools/durchlauf.mjs` |
 | 4 | Basis zeigt keine Funktion, die man erklären müsste | ✅ |
 | 5 | Nach zehn Einkäufen stehen die häufigsten Artikel oben | ✅ geprüft in Unit-Test und Prüfstrecke |
-| 6 | Exportierte Datei lässt sich auf einem zweiten Gerät importieren | ⏳ Teilen ist noch nicht gebaut |
+| 6 | Exportierte Datei lässt sich auf einem zweiten Gerät importieren | ✅ Export, Import und Zusammenführung in `tools/durchlauf.mjs` geprüft |
 
 ---
 

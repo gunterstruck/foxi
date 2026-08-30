@@ -363,6 +363,12 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
     text-align: center;
     transition: transform 0.09s ease, background 0.15s, border-color 0.15s, box-shadow 0.15s;
     -webkit-tap-highlight-color: transparent;
+    /* Langes Drücken kopiert den Artikelnamen. Ohne diese beiden Zeilen käme
+       auf iOS stattdessen die Textauswahl mit ihrer eigenen Sprechblase –
+       zwei Bedienungen auf derselben Geste, von denen die falsche gewinnt. */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 .kachel:hover { border-color: #cfe3cf; background: var(--color-surface); }
 .kachel:active { transform: scale(0.94); }
@@ -446,6 +452,173 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
 .karte p:last-child { margin-bottom: 0; }
 .karte-knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
 .karte-knoepfe button { min-height: 44px; }
+
+/* Rezepte ─────────────────────────────────────────────────────────────── */
+
+.rezeptliste {
+    list-style: none;
+    margin: 4px 0 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.rezeptliste li { display: flex; gap: 6px; }
+
+.rezept-knopf {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 46px;
+    padding: 8px 14px;
+    text-align: left;
+    background: var(--color-surface-2);
+    border-color: transparent;
+    border-radius: var(--radius-m);
+}
+.rezept-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rezept-zahl { font-size: 0.78rem; color: var(--color-text-muted); white-space: nowrap; }
+
+.rezept-loeschen {
+    flex: 0 0 46px;
+    border-radius: var(--radius-m);
+    background: var(--color-surface);
+    font-size: 0.95rem;
+}
+
+/* Reihenfolge ziehen ──────────────────────────────────────────────────── */
+
+.ziehliste {
+    list-style: none;
+    margin: 4px 0 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.ziehzeile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 4px 12px 4px 4px;
+    background: var(--color-surface-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius-m);
+    font-size: 0.9rem;
+    /* Sonst markiert das Ziehen am Schreibtisch die Zeilentexte blau mit. */
+    -webkit-user-select: none;
+    user-select: none;
+}
+.ziehzeile.zieht {
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-2);
+}
+.zieh-griff {
+    flex: 0 0 38px;
+    min-height: 38px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 1.05rem;
+    cursor: grab;
+    /* Ohne das rollt beim Ziehen die Seite mit, statt die Zeile zu
+       verschieben – auf dem Handy der ganze Unterschied. */
+    touch-action: none;
+}
+.zieh-griff:active { cursor: grabbing; }
+.zieh-icon { font-size: 1.1rem; }
+.zieh-name { font-weight: 600; }
+
+/* Statistik ───────────────────────────────────────────────────────────── */
+
+.statistikliste {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.statistikliste li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 68px auto;
+    align-items: center;
+    gap: 9px;
+    font-size: 0.88rem;
+}
+.stat-icon { font-size: 1.05rem; }
+.stat-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stat-balken {
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-2);
+    overflow: hidden;
+}
+.stat-fuellung {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+}
+/* Zehn Stufen statt eines `style`-Attributs – die Auslieferung verbietet
+   Inline-CSS, und ein Balken ist kein Grund, das aufzuweichen. */
+.fuell-1 { width: 10%; } .fuell-2 { width: 20%; } .fuell-3 { width: 30%; }
+.fuell-4 { width: 40%; } .fuell-5 { width: 50%; } .fuell-6 { width: 60%; }
+.fuell-7 { width: 70%; } .fuell-8 { width: 80%; } .fuell-9 { width: 90%; }
+.fuell-10 { width: 100%; }
+.stat-zahl { font-variant-numeric: tabular-nums; color: var(--color-text-muted); font-weight: 600; }
+
+/* Dialog ──────────────────────────────────────────────────────────────── */
+
+.dialog-auflage {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(15, 23, 42, 0.38);
+}
+.dialog {
+    width: 100%;
+    max-width: 420px;
+    max-height: 82dvh;
+    overflow-y: auto;
+    padding: 20px;
+    background: var(--color-surface);
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-2);
+}
+.dialog-titel { margin: 0 0 12px; font-size: 1.02rem; text-transform: none; letter-spacing: 0; color: var(--color-text); }
+.dialog-koerper { display: flex; flex-direction: column; gap: 8px; }
+.dialog-koerper p { margin: 0; font-size: 0.9rem; }
+.dialog-koerper input { min-height: 46px; }
+.dialog-text {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-m);
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    resize: vertical;
+}
+.dialog-knoepfe {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+.dialog-knoepfe button { flex: 1 1 auto; min-height: 46px; }
+.dialog-abbruch { flex: 0 0 auto !important; color: var(--color-text-muted); }
 
 .fusszeile {
     margin: 18px 2px 0;

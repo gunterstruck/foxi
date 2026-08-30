@@ -15,7 +15,8 @@
  *   node tools/durchlauf.mjs
  */
 import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { chromium, devices } from 'playwright';
@@ -49,7 +50,15 @@ for (let versuch = 0; versuch < 50; versuch++) {
 const browser = await chromium.launch(
     process.env.FOXI_CHROMIUM ? { executablePath: process.env.FOXI_CHROMIUM } : {}
 );
-const kontext = await browser.newContext({ ...devices['iPhone 13'], isMobile: true, hasTouch: true });
+const kontext = await browser.newContext({
+    ...devices['iPhone 13'],
+    isMobile: true,
+    hasTouch: true,
+    /* Für die Prüfung des Briefing-Exports: Ohne diese Rechte wirft
+       `navigator.clipboard.writeText` im Kopflosen, und die Ersatzkette
+       verdeckte, ob der Text überhaupt stimmt. */
+    permissions: ['clipboard-read', 'clipboard-write']
+});
 const seite = await kontext.newPage();
 
 /* Jede Anfrage mitschreiben. Erwartet werden ausschließlich Adressen der
@@ -58,6 +67,15 @@ const fremdeAnfragen = [];
 seite.on('request', (anfrage) => {
     if (!anfrage.url().startsWith(ADRESSE.slice(0, -1))) fremdeAnfragen.push(anfrage.url());
 });
+
+/* Der Entwicklungsserver schickt dieselbe Content-Security-Policy wie die
+   Auslieferung. Ein Verstoß landet als Konsolenfehler – hier eingesammelt,
+   damit er den Lauf durchfallen lässt statt erst im Betrieb aufzufallen. */
+const fehlerAufDerSeite = [];
+seite.on('console', (nachricht) => {
+    if (nachricht.type() === 'error') fehlerAufDerSeite.push(nachricht.text());
+});
+seite.on('pageerror', (fehler) => fehlerAufDerSeite.push(String(fehler)));
 
 await seite.goto(ADRESSE, { waitUntil: 'networkidle' });
 await seite.waitForSelector('.leer');
@@ -161,9 +179,156 @@ await seite.locator('#tab-mehr').tap();
 await seite.waitForSelector('.karte');
 await seite.screenshot({ path: join(bilder, '07-mehr.png') });
 
-/* ── Netz ───────────────────────────────────────────────────────────────── */
+/* ── Basis zeigt nichts Erklärungsbedürftiges ───────────────────────────── */
+const karteninBasis = await seite.locator('#bereich-mehr .karte:not(.experte-nur)').count();
+const karteninBasisSichtbar = await seite.locator('#bereich-mehr .karte:visible').count();
+pruefe(karteninBasisSichtbar === karteninBasis,
+    `Basis zeigt in „Mehr" nur die zwei Grundkarten (${karteninBasisSichtbar})`);
+
+/* ── Experte: Rezepte ───────────────────────────────────────────────────── */
+await seite.locator('#modus-schalter .seg[data-modus="experte"]').tap();
+await seite.waitForSelector('.rezeptliste');
+const rezeptAnzahl = await seite.locator('.rezept-knopf').count();
+pruefe(rezeptAnzahl >= 6, `Die Beispielrezepte sind da (${rezeptAnzahl})`);
+
+await seite.locator('.rezept-knopf', { hasText: 'Linsensuppe' }).tap();
+await seite.waitForSelector('#bereich-liste .listenkarte');
+const nachRezept = Number(await seite.locator('#tab-liste-zahl').textContent());
+pruefe(nachRezept >= 8, `Ein Tipp legt alle Zutaten auf einmal ab (${nachRezept} offen)`);
+await seite.screenshot({ path: join(bilder, '08-rezept-uebertragen.png') });
+
+/* Eigenes Rezept aus der aktuellen Liste. */
+await seite.locator('#tab-mehr').tap();
+await seite.locator('button', { hasText: 'Aktuelle Liste als Rezept sichern' }).tap();
+await seite.waitForSelector('.dialog input');
+await seite.locator('.dialog input').fill('Wochenende');
+await seite.locator('.dialog .primary').tap();
+await seite.waitForTimeout(200);
+pruefe(await seite.locator('.rezept-knopf', { hasText: 'Wochenende' }).count() === 1,
+    'Die Liste lässt sich als eigenes Rezept sichern');
+
+/* ── Experte: Reihenfolge im Laden ──────────────────────────────────────── */
+const ersteKategorieVorher = await seite.locator('.zieh-name').first().textContent();
+await seite.locator('.ziehzeile').nth(1).locator('.zieh-griff').focus();
+await seite.keyboard.press('ArrowUp');
+await seite.waitForTimeout(250);
+const ersteKategorieNachher = await seite.locator('.zieh-name').first().textContent();
+pruefe(ersteKategorieVorher !== ersteKategorieNachher,
+    `Die Kategorie-Reihenfolge lässt sich ändern (${ersteKategorieVorher} → ${ersteKategorieNachher})`);
+
+/* Dieselbe Liste per Zeiger ziehen – der Weg, den ein Finger nimmt.
+
+   `boundingBox()` scrollt im Gegensatz zu `tap()` nicht von selbst hin.
+   Ohne das Scrollen liefert es Koordinaten unterhalb des Fensters, die Maus
+   zielte ins Leere und der Zug bewegte nichts – gemessen und behoben. */
+const zweite = seite.locator('.ziehzeile').nth(2);
+const drittesZiel = seite.locator('.ziehzeile').nth(5);
+await zweite.scrollIntoViewIfNeeded();
+await drittesZiel.scrollIntoViewIfNeeded();
+await zweite.scrollIntoViewIfNeeded();
+const vonKasten = await zweite.locator('.zieh-griff').boundingBox();
+const nachKasten = await drittesZiel.boundingBox();
+const gezogeneKategorie = await zweite.locator('.zieh-name').textContent();
+await seite.mouse.move(vonKasten.x + vonKasten.width / 2, vonKasten.y + vonKasten.height / 2);
+await seite.mouse.down();
+await seite.mouse.move(nachKasten.x + nachKasten.width / 2, nachKasten.y + nachKasten.height - 2, { steps: 12 });
+await seite.mouse.up();
+await seite.waitForTimeout(250);
+/* Nicht auf einen festen Platz prüfen: Die Liste sortiert sich unter dem
+   Zeiger laufend um, deshalb hängt die Endstelle vom gefahrenen Weg ab.
+   Die Eigenschaft, auf die es ankommt, ist „sie ist nach unten gewandert
+   und die neue Reihenfolge steht in der Datenbank". */
+const reihenfolgeNachher = await seite.locator('.zieh-name').allTextContents();
+const neueStelle = reihenfolgeNachher.indexOf(gezogeneKategorie);
+pruefe(neueStelle > 2,
+    `Ziehen mit dem Zeiger verschiebt die Kategorie (${gezogeneKategorie}: Platz 3 → ${neueStelle + 1})`);
+await seite.screenshot({ path: join(bilder, '09-reihenfolge.png') });
+
+/* Wirkt die Reihenfolge auf die Liste? */
+await seite.locator('button', { hasText: 'Ursprüngliche Reihenfolge' }).tap();
+await seite.waitForTimeout(200);
+await seite.locator('#tab-liste').tap();
+await seite.waitForSelector('#bereich-liste .gruppe-kopf');
+const ersteListenGruppe = await seite.locator('#bereich-liste .gruppe-kopf').first().textContent();
+pruefe(ersteListenGruppe?.includes('Obst'),
+    `Die Liste folgt der Kategorie-Reihenfolge (erste Gruppe: ${ersteListenGruppe?.trim()})`);
+
+/* ── Experte: Briefing-Export ───────────────────────────────────────────── */
+await seite.locator('#tab-mehr').tap();
+await seite.locator('button', { hasText: 'Liste als Text kopieren' }).tap();
+await seite.waitForTimeout(300);
+const ausDerZwischenablage = await seite.evaluate(() => navigator.clipboard.readText());
+pruefe(/^Einkaufsliste \(\d{2}\.\d{2}\.\d{4}\)\n\n/.test(ausDerZwischenablage),
+    'Der Klartext beginnt mit Überschrift und Leerzeile');
+pruefe(/\n[^:\n]+: .+/.test(ausDerZwischenablage),
+    'Er führt die Kategorien als „Kategorie: Artikel, Artikel"');
+/* Keine vorgefertigte Frage: Der Mensch schreibt selbst, was er wissen will. */
+pruefe(!ausDerZwischenablage.includes('?'), 'Er hängt keine Frage an');
+
+/* Langes Drücken auf eine Kachel: nur dieser eine Artikelname. */
+await seite.locator('#tab-katalog').tap();
+await seite.locator('#katalog-suche').fill('Sardellenpaste');
+await seite.waitForSelector('.kachel');
+const kachelKasten = await seite.locator('.kachel').first().boundingBox();
+await seite.mouse.move(kachelKasten.x + kachelKasten.width / 2, kachelKasten.y + kachelKasten.height / 2);
+await seite.mouse.down();
+await seite.waitForTimeout(700);
+await seite.mouse.up();
+await seite.waitForTimeout(200);
+pruefe(await seite.evaluate(() => navigator.clipboard.readText()) === 'Sardellenpaste',
+    'Langes Drücken kopiert nur den Artikelnamen');
+pruefe(await seite.locator('.kachel').first().evaluate((el) => !el.classList.contains('ist-drauf')),
+    'Langes Drücken legt den Artikel nicht zusätzlich auf die Liste');
+await seite.locator('#katalog-suche').fill('');
+
+/* ── Experte: Teilen und Einlesen ───────────────────────────────────────── */
+const fremdeListe = {
+    typ: 'foxi-liste',
+    version: 1,
+    erzeugt: new Date().toISOString(),
+    artikel: [
+        { id: 'sekt', name: 'Sekt', kategorieId: 'getraenke', kategorieName: 'Getränke', icon: '🥂', menge: '2', notiz: '' },
+        { id: 'grillanzuender', name: 'Grillanzünder', kategorieId: 'gibt-es-nicht', kategorieName: '', icon: '🔥', menge: '', notiz: '' }
+    ]
+};
+const fremdePfad = join(tmpdir(), 'foxi-fremde-liste.json');
+writeFileSync(fremdePfad, JSON.stringify(fremdeListe, null, 2), 'utf8');
+
+await seite.locator('#tab-mehr').tap();
+const [dateiwaehler] = await Promise.all([
+    seite.waitForEvent('filechooser'),
+    seite.locator('button', { hasText: 'Datei einlesen' }).tap()
+]);
+await dateiwaehler.setFiles(fremdePfad);
+await seite.waitForSelector('.dialog');
+const dialogText = await seite.locator('.dialog-koerper').textContent();
+pruefe(dialogText?.includes('2 neue Artikel'),
+    `Der Zusammenführungs-Dialog zeigt, was passieren würde (${dialogText?.trim()})`);
+await seite.screenshot({ path: join(bilder, '10-zusammenfuehren.png') });
+
+await seite.locator('.dialog-knoepfe .primary').tap();
+await seite.waitForTimeout(300);
+await seite.locator('#tab-liste').tap();
+await seite.waitForSelector('#bereich-liste .listenkarte');
+const listenNamen = await seite.locator('#bereich-liste .karte-name').allTextContents();
+pruefe(listenNamen.includes('Sekt'), 'Ein eingelesener Artikel steht auf der Liste');
+pruefe(listenNamen.includes('Grillanzünder'),
+    'Ein unbekannter Artikel wird angelegt statt verworfen');
+const sonstiges = await seite.locator('#bereich-liste .gruppe-kopf', { hasText: 'Sonstiges' }).count();
+pruefe(sonstiges === 1, 'Er landet unter „Sonstiges", nicht in der ersten Kategorie');
+
+/* ── Experte: Statistik ─────────────────────────────────────────────────── */
+await seite.locator('#tab-mehr').tap();
+await seite.waitForSelector('.statistikliste');
+const stat = await seite.locator('.statistikliste li').first().textContent();
+pruefe(/10×/.test(stat || ''), `Die Statistik zählt die zehn Einkäufe (${stat?.trim()})`);
+await seite.screenshot({ path: join(bilder, '11-statistik.png'), fullPage: true });
+
+/* ── Netz und Regeln ────────────────────────────────────────────────────── */
 pruefe(fremdeAnfragen.length === 0,
     `Keine fremde Adresse im Netzwerk${fremdeAnfragen.length ? `: ${fremdeAnfragen.join(', ')}` : ''}`);
+pruefe(fehlerAufDerSeite.length === 0,
+    `Kein Fehler und kein CSP-Verstoß auf der Seite${fehlerAufDerSeite.length ? `: ${fehlerAufDerSeite.join(' | ')}` : ''}`);
 
 await browser.close();
 server.kill();
