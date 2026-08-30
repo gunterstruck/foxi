@@ -56,7 +56,11 @@ async function erstbefuellung(basisPfad) {
         eigen: false
     }));
 
-    await db.legeViele(db.SPEICHER.KATEGORIEN, katalog.kategorien);
+    /* `ursprung` merkt sich die Reihenfolge, mit der Foxi ausgeliefert wurde.
+       Ohne sie gäbe es keinen Weg zurück, nachdem jemand die Kategorien
+       einmal durcheinandergezogen hat. */
+    const kategorien = katalog.kategorien.map((k) => ({ ...k, ursprung: k.position }));
+    await db.legeViele(db.SPEICHER.KATEGORIEN, kategorien);
     await db.legeViele(db.SPEICHER.ARTIKEL, artikel);
     await db.legeViele(db.SPEICHER.REZEPTE, rezepte.rezepte);
     await db.lege(db.SPEICHER.EINSTELLUNGEN, { schluessel: 'modus', wert: 'basis' });
@@ -233,6 +237,110 @@ export function alleArtikel() {
 }
 
 /* ────────────────────────────────────────────────────────────────────────
+   Rezepte
+
+   Ein Rezept ist ein Name und eine Artikelliste. Kein Web-Import, keine
+   Rezeptdatenbank, keine Bilder, keine Mengenangaben pro Zutat – das wäre
+   eine Kochbuch-App, und die ist Foxi nicht.
+   ──────────────────────────────────────────────────────────────────────── */
+
+export async function rezeptAnlegen(name, artikelIds) {
+    const sauber = String(name || '').trim();
+    if (!sauber || !artikelIds?.length) return null;
+    const rezept = {
+        id: `rezept-eigen-${Date.now().toString(36)}`,
+        name: sauber,
+        artikelIds: [...new Set(artikelIds)],
+        eigen: true
+    };
+    zustand.rezepte = [...zustand.rezepte, rezept];
+    await db.lege(db.SPEICHER.REZEPTE, rezept);
+    melde('rezepte');
+    return rezept;
+}
+
+export async function rezeptLoeschen(id) {
+    zustand.rezepte = zustand.rezepte.filter((r) => r.id !== id);
+    await db.loesche(db.SPEICHER.REZEPTE, id);
+    melde('rezepte');
+}
+
+/**
+ * Alle Zutaten auf einmal. Was schon auf der Liste steht, bleibt wie es ist –
+ * ein Rezept darf eine von Hand gesetzte Menge nicht überschreiben.
+ * Zutaten, die es im Katalog nicht mehr gibt, werden übersprungen.
+ */
+export async function rezeptAufListe(id) {
+    const rezept = zustand.rezepte.find((r) => r.id === id);
+    if (!rezept) return 0;
+
+    const neue = rezept.artikelIds.filter(
+        (artikelId) => zustand.artikel.has(artikelId) && !zustand.liste.has(artikelId)
+    );
+    const eintraege = neue.map((artikelId) => ({
+        artikelId, menge: '', notiz: '', erledigt: false, erledigtAm: null
+    }));
+    for (const eintrag of eintraege) zustand.liste.set(eintrag.artikelId, eintrag);
+    if (eintraege.length) await db.legeViele(db.SPEICHER.LISTE, eintraege);
+    melde('liste');
+    return eintraege.length;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Import
+   ──────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Eine eingelesene Liste übernehmen.
+ *
+ * `modus` ist entweder `nurNeue` (Mengen auf dieser Seite bleiben stehen)
+ * oder `alles` (die Datei gewinnt). Unbekannte Artikel werden angelegt, mit
+ * ihrer Kategorie aus der Datei – kennt dieses Gerät die Kategorie nicht,
+ * landen sie unter „Sonstiges" statt im Nichts.
+ */
+export async function importAnwenden(fremdeArtikel, modus = 'nurNeue') {
+    const bekannteKategorien = new Set(zustand.kategorien.map((k) => k.id));
+    const neueArtikel = [];
+    const neueEintraege = [];
+
+    for (const fremd of fremdeArtikel) {
+        const vorhanden = zustand.liste.has(fremd.id);
+        if (vorhanden && modus !== 'alles') continue;
+
+        if (!zustand.artikel.has(fremd.id)) {
+            const artikel = {
+                id: fremd.id,
+                name: fremd.name,
+                kategorieId: bekannteKategorien.has(fremd.kategorieId) ? fremd.kategorieId : 'sonstiges',
+                icon: fremd.icon || '🛒',
+                zaehler: 0,
+                letzteKaeufe: [],
+                eigen: true
+            };
+            zustand.artikel.set(artikel.id, artikel);
+            neueArtikel.push(artikel);
+        }
+
+        /* Ein bereits abgehakter Eintrag wird durch den Import wieder offen:
+           Wenn das andere Gerät ihn schickt, fehlt er dort noch. */
+        const eintrag = {
+            artikelId: fremd.id,
+            menge: fremd.menge || '',
+            notiz: fremd.notiz || '',
+            erledigt: false,
+            erledigtAm: null
+        };
+        zustand.liste.set(eintrag.artikelId, eintrag);
+        neueEintraege.push(eintrag);
+    }
+
+    if (neueArtikel.length) await db.legeViele(db.SPEICHER.ARTIKEL, neueArtikel);
+    if (neueEintraege.length) await db.legeViele(db.SPEICHER.LISTE, neueEintraege);
+    melde('import');
+    return neueEintraege.length;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
    Einstellungen
    ──────────────────────────────────────────────────────────────────────── */
 
@@ -272,6 +380,13 @@ export async function kategorienNeuOrdnen(idsInReihenfolge) {
     zustand.kategorien = neu;
     await db.legeViele(db.SPEICHER.KATEGORIEN, neu);
     melde('kategorien');
+}
+
+export async function kategorienZuruecksetzen() {
+    const nachUrsprung = [...zustand.kategorien].sort(
+        (a, b) => (a.ursprung ?? a.position) - (b.ursprung ?? b.position)
+    );
+    await kategorienNeuOrdnen(nachUrsprung.map((k) => k.id));
 }
 
 export async function allesZuruecksetzen() {

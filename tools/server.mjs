@@ -29,6 +29,27 @@ const TYPEN = {
     '.txt': 'text/plain; charset=utf-8'
 };
 
+/**
+ * Dieselben Kopfzeilen wie in `vercel.json`.
+ *
+ * Nicht Bequemlichkeit, sondern der Grund, warum die Prüfstrecke etwas wert
+ * ist: Ohne sie liefe sie ohne Content-Security-Policy, und ein Verstoß
+ * fiele erst nach der Veröffentlichung auf. Wer hier etwas ändert, ändert es
+ * in `vercel.json` mit.
+ */
+const SICHERHEITSKOPFZEILEN = {
+    'Content-Security-Policy': [
+        "default-src 'self'", "base-uri 'none'", "object-src 'none'",
+        "frame-ancestors 'none'", "form-action 'none'", "script-src 'self'",
+        "style-src 'self'", "img-src 'self' data:", "font-src 'self'",
+        "connect-src 'self'", "manifest-src 'self'", "worker-src 'self'"
+    ].join('; '),
+    'Permissions-Policy':
+        'geolocation=(), microphone=(), camera=(), usb=(), bluetooth=(), payment=(), midi=(), serial=(), idle-detection=()',
+    'Referrer-Policy': 'no-referrer',
+    'X-Content-Type-Options': 'nosniff'
+};
+
 createServer(async (anfrage, antwort) => {
     try {
         const adresse = new URL(anfrage.url, `http://localhost:${hafen}`);
@@ -45,7 +66,8 @@ createServer(async (anfrage, antwort) => {
             'Content-Type': TYPEN[extname(pfad)] || 'application/octet-stream',
             /* Beim Entwickeln nie aus dem Zwischenspeicher – sonst debuggt
                man eine Fassung, die es nicht mehr gibt. */
-            'Cache-Control': 'no-store'
+            'Cache-Control': 'no-store',
+            ...SICHERHEITSKOPFZEILEN
         });
         antwort.end(inhalt);
     } catch {
