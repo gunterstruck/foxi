@@ -1,0 +1,16 @@
+# Abhängigkeiten – Foxi hat zur Laufzeit keine; hier landen nur die
+# Werkzeuge für Tests und die Prüfstrecke.
+node_modules/
+
+# Editor
+.vscode/
+.idea/
+*.sw?
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
+
+# Protokolle
+*.log
+npm-debug.log*
