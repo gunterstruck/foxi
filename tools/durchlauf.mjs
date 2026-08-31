@@ -95,12 +95,19 @@ pruefe(kopfPasst, 'Die Kopfzeile läuft nicht über');
 const familienDesign = await seite.evaluate(async () => {
     const manifest = await fetch('manifest.webmanifest').then((antwort) => antwort.json());
     const anmeldung = await navigator.serviceWorker.ready;
+    const klassisch = await fetch('favicon.ico', { cache: 'no-store' });
+    const pngFallback = await fetch(
+        document.querySelector('link[rel="icon"][type="image/png"]')?.href,
+        { cache: 'no-store' }
+    );
     return {
         leitton: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
         theme: document.querySelector('meta[name="theme-color"]')?.getAttribute('content'),
         icon: document.querySelector('.brand-icon')?.getAttribute('src') || '',
         manifestTheme: manifest.theme_color,
-        updateOhneCache: anmeldung.updateViaCache
+        updateOhneCache: anmeldung.updateViaCache,
+        klassisch: { status: klassisch.status, typ: klassisch.headers.get('content-type') },
+        pngFallback: { status: pngFallback.status, typ: pngFallback.headers.get('content-type') }
     };
 });
 pruefe(familienDesign.leitton === '#0d9488', 'Foxi verwendet exakt den Leitton der Fuchs-Familie');
@@ -108,6 +115,11 @@ pruefe(familienDesign.theme === '#0d9488' && familienDesign.manifestTheme === '#
     'Browserleiste und Manifest verwenden denselben Leitton');
 pruefe(familienDesign.icon.includes('icons/foxi.svg?v='),
     'Im Kopf steht das gespeicherte Foxi-Zeichen statt eines fremden Emoji');
+pruefe(familienDesign.klassisch.status === 200 &&
+    familienDesign.klassisch.typ === 'image/x-icon' &&
+    familienDesign.pngFallback.status === 200 &&
+    familienDesign.pngFallback.typ === 'image/png',
+    'Klassische Dashboard-Crawler erhalten ICO- und PNG-Favicons');
 pruefe(familienDesign.updateOhneCache === 'none',
     'Der Browser prüft den Service Worker ohne einen alten HTTP-Zwischenspeicher');
 await seite.screenshot({ path: join(bilder, '01-liste-leer.png') });

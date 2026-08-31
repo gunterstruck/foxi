@@ -4,7 +4,7 @@
 ![Kein Konto](https://img.shields.io/badge/Kein%20Konto-kein%20Login%2C%20kein%20Backend-0f766e)
 ![PWA](https://img.shields.io/badge/PWA-offlinef%C3%A4hig-purple)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-0.7.0-orange)
+![Version](https://img.shields.io/badge/Version-0.7.1-orange)
 
 **Tippen statt Tippen.**
 
@@ -200,14 +200,14 @@ der Adresse erreichbar. Das ist kein Leck – dieselben Dateien liegen ohnehin
 ### Prüfen
 
 ```bash
-npm install && npm test          # 63 Unit-Tests (Logik, Daten, Import, PWA und Designsystem)
+npm install && npm test          # 64 Unit-Tests (Logik, Daten, Import, PWA und Designsystem)
 
 npm i --no-save playwright && npx playwright install chromium
-node tools/durchlauf.mjs         # 55 Prüfungen im echten Browser + Bilder
+node tools/durchlauf.mjs         # 56 Prüfungen im echten Browser + Bilder
 node tools/update-lauf.mjs       # echter Wechsel von alter auf neue PWA-Fassung
 ```
 
-Die Prüfstrecke (55 Prüfungen) fährt die Abnahmekriterien ab, die man mit
+Die Prüfstrecke (56 Prüfungen) fährt die Abnahmekriterien ab, die man mit
 Unit-Tests nicht erreicht: die Zwei-Tipp-Regel, zehn simulierte Einkäufe, den
 verlustfreien Moduswechsel, Rezepte, das Ziehen der Kategorien mit Zeiger und
 mit Tastatur, den Briefing-Export aus der echten Zwischenablage und einen
@@ -324,7 +324,7 @@ weitergibt. Foxi schlägt damit nichts nach und schickt nichts weg.
 
 ## Stand und was als Nächstes kommt
 
-**Gebaut (v0.7.0):** Version 1 ist inhaltlich vollständig – Basismodus,
+**Gebaut (v0.7.1):** Version 1 ist inhaltlich vollständig – Basismodus,
 lernender Katalog, Rezepte, Kategorie-Reihenfolge per Ziehen, Teilen als
 Datei mit Zusammenführung beim Import, Briefing-Export, Statistik,
 Offlinebetrieb, Installierbarkeit. Der geführte Angebotscheck verbindet Foxis

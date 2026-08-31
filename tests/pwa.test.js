@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 
 const wurzel = join(dirname(fileURLToPath(import.meta.url)), '..');
 const lies = (pfad) => readFileSync(join(wurzel, pfad), 'utf8');
+const liesBinaer = (pfad) => readFileSync(join(wurzel, pfad));
 
 describe('PWA-Aktualisierung', () => {
     it('hält Anwendung, Manifest, Cache und Icon-Adressen auf derselben Version', () => {
@@ -51,5 +52,20 @@ describe('Fuchs-Familienzeichen', () => {
         expect(icon).toContain('fill="#0d9488"');
         expect(icon.match(/<rect x="36" y="(?:10|16|22)"/g)).toHaveLength(3);
         expect(icon).toContain('M50 32 C64 32 76 42 76 54');
+    });
+
+    it('liefert dasselbe Zeichen auch für klassische Favicon-Crawler', () => {
+        const index = lies('index.html');
+        const worker = lies('sw.js');
+        const ico = liesBinaer('favicon.ico');
+        const png = liesBinaer('icons/favicon-64.png');
+
+        expect(index).toContain('rel="shortcut icon"');
+        expect(index).toContain('icons/favicon-64.png');
+        expect(worker).toContain('favicon.ico');
+        expect(worker).toContain('icons/favicon-64.png');
+        expect([...ico.subarray(0, 6)]).toEqual([0, 0, 1, 0, 1, 0]);
+        expect([...ico.subarray(22, 30)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+        expect([...png.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
     });
 });

@@ -20,11 +20,13 @@ import { dirname, join } from 'node:path';
 import { chromium } from 'playwright';
 
 const hier = dirname(fileURLToPath(import.meta.url));
+const wurzel = join(hier, '..');
 const icons = join(hier, '..', 'icons');
 
 const AUFTRAEGE = [
     { quelle: 'foxi.svg',          ziel: 'icon-192.png',         groesse: 192 },
     { quelle: 'foxi.svg',          ziel: 'icon-512.png',         groesse: 512 },
+    { quelle: 'foxi.svg',          ziel: 'favicon-64.png',       groesse: 64 },
     { quelle: 'foxi.svg',          ziel: 'apple-touch-icon.png', groesse: 180 },
     { quelle: 'foxi-maskable.svg', ziel: 'maskable-512.png',     groesse: 512 }
 ];
@@ -55,3 +57,23 @@ for (const auftrag of AUFTRAEGE) {
 }
 
 await browser.close();
+
+/* Klassische Crawler und einige Dashboards fragen weiterhin direkt
+   `/favicon.ico` ab, selbst wenn HTML und Manifest moderne SVG-/PNG-Icons
+   nennen. ICO darf ein PNG enthalten: Der kleine Container hält deshalb
+   dieselben 64×64-Pixel ohne zweite Bildquelle oder Qualitätsverlust. */
+const faviconPng = readFileSync(join(icons, 'favicon-64.png'));
+const icoKopf = Buffer.alloc(22);
+icoKopf.writeUInt16LE(0, 0);                 // reserviert
+icoKopf.writeUInt16LE(1, 2);                 // Bildtyp ICO
+icoKopf.writeUInt16LE(1, 4);                 // genau ein Bild
+icoKopf.writeUInt8(64, 6);                   // Breite
+icoKopf.writeUInt8(64, 7);                   // Höhe
+icoKopf.writeUInt8(0, 8);                    // keine Palette
+icoKopf.writeUInt8(0, 9);                    // reserviert
+icoKopf.writeUInt16LE(1, 10);                // Farbebenen
+icoKopf.writeUInt16LE(32, 12);               // Farbtiefe
+icoKopf.writeUInt32LE(faviconPng.length, 14);
+icoKopf.writeUInt32LE(icoKopf.length, 18);    // Bild beginnt nach Verzeichnis
+writeFileSync(join(wurzel, 'favicon.ico'), Buffer.concat([icoKopf, faviconPng]));
+console.log('favicon.ico (64×64 PNG im ICO-Container)');
