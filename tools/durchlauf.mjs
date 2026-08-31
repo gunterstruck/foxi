@@ -308,6 +308,94 @@ pruefe(/Milch \(10×\)/.test(stammtext) && /Butter \(10×\)/.test(stammtext),
     `Er nennt die Stammartikel mit ihrer Kaufzahl (${stammtext.split('\n')[3]?.slice(0, 60)}…)`);
 pruefe(!stammtext.includes('?'), 'Auch er hängt keine Frage an');
 
+/* ── Experte: Angebotsradar-Pilot ──────────────────────────────────────── */
+await seite.locator('button', { hasText: 'Demo-Auftrag kopieren' }).tap();
+await seite.waitForTimeout(300);
+const angebotsauftrag = await seite.evaluate(() => navigator.clipboard.readText());
+pruefe(angebotsauftrag.includes('WÖCHENTLICHER FOXI-ANGEBOTSRADAR') &&
+    angebotsauftrag.includes('demo-45136-essen'),
+    'Der Demo-Auftrag trägt Regelwerk und Profil');
+pruefe(angebotsauftrag.includes('ALDI Nord') && angebotsauftrag.includes('ALDI Süd') &&
+    angebotsauftrag.includes('REWE'),
+    'Der Auftrag nennt Nord, Süd und REWE');
+const profilText = angebotsauftrag.split('Eingabeprofil:\n')[1];
+const profilImAuftrag = JSON.parse(profilText);
+pruefe(profilImAuftrag.region === '45136 Essen' &&
+    !Object.hasOwn(profilImAuftrag, 'wohnadresse') &&
+    !Object.hasOwn(profilImAuftrag, 'koordinaten'),
+    'Der Demo-Auftrag trägt nur die Region, keine Wohnadresse');
+
+const heute = new Date();
+const tag = (datum) => datum.toISOString().slice(0, 10);
+const inSechsTagen = new Date(heute);
+inSechsTagen.setDate(inSechsTagen.getDate() + 6);
+const agentenergebnis = {
+    typ: 'foxi-angebote',
+    version: 1,
+    profilId: 'demo-45136-essen',
+    demo: true,
+    erzeugt: heute.toISOString(),
+    angebote: [{
+        artikelId: 'milch',
+        artikelName: 'Milch',
+        haendler: 'ALDI Nord',
+        markt: 'Schürmannstraße 43b, 45136 Essen',
+        produkt: 'MILSANI Frische Vollmilch',
+        preis: 0.99,
+        waehrung: 'EUR',
+        menge: '1 l',
+        grundpreis: '0,99 €/l',
+        gueltigVon: tag(heute),
+        gueltigBis: tag(inSechsTagen),
+        treffer: 'genau',
+        hinweis: '',
+        quelle: 'https://www.aldi-nord.de/angebote.html'
+    }]
+};
+const angebotsPfad = join(tmpdir(), 'foxi-agentenergebnis.json');
+await seite.locator('button', { hasText: 'Ergebnis einfügen' }).tap();
+await seite.waitForSelector('.angebote-eingabe');
+await seite.locator('.angebote-eingabe').fill(JSON.stringify(agentenergebnis, null, 2));
+await seite.locator('.dialog-knoepfe .primary').tap();
+await seite.waitForSelector('.angebotsliste');
+const eingefuegterText = await seite.locator('.angebotsliste').textContent();
+pruefe(eingefuegterText?.includes('Milch') && eingefuegterText.includes('0,99 €'),
+    'Ein kopiertes JSON-Ergebnis lässt sich direkt einfügen');
+
+const dateiErgebnis = structuredClone(agentenergebnis);
+dateiErgebnis.angebote.push({
+    artikelId: 'butter',
+    artikelName: 'Butter',
+    haendler: 'ALDI Süd',
+    markt: 'Humboldtring 5, 45472 Mülheim an der Ruhr',
+    produkt: 'MILSANI Deutsche Markenbutter',
+    preis: 1.49,
+    waehrung: 'EUR',
+    menge: '250 g',
+    grundpreis: '5,96 €/kg',
+    gueltigVon: tag(heute),
+    gueltigBis: tag(inSechsTagen),
+    treffer: 'alternative',
+    hinweis: 'Beispiel für eine plausible Alternative.',
+    quelle: 'https://www.aldi-sued.de/angebote'
+});
+writeFileSync(angebotsPfad, JSON.stringify(dateiErgebnis, null, 2), 'utf8');
+
+const [angebotsDateiwaehler] = await Promise.all([
+    seite.waitForEvent('filechooser'),
+    seite.locator('button', { hasText: 'Ergebnisdatei einlesen' }).tap()
+]);
+await angebotsDateiwaehler.setFiles(angebotsPfad);
+await seite.waitForSelector('.angebotsliste li:nth-child(2)');
+const angebotsText = await seite.locator('.angebotsliste').textContent();
+pruefe(angebotsText?.includes('Milch') && angebotsText.includes('0,99 €') &&
+    angebotsText.includes('ALDI Nord') && angebotsText.includes('Butter') &&
+    angebotsText.includes('ALDI Süd'),
+    `Ein geprüftes Agentenergebnis erscheint in Foxi (${angebotsText?.trim()})`);
+await seite.locator('.angebote-karte').scrollIntoViewIfNeeded();
+await seite.waitForTimeout(150);
+await seite.screenshot({ path: join(bilder, '13-angebotsradar.png') });
+
 /* Langes Drücken auf eine Kachel: nur dieser eine Artikelname. */
 await seite.locator('#tab-katalog').tap();
 await seite.locator('#katalog-suche').fill('Sardellenpaste');
@@ -340,7 +428,7 @@ writeFileSync(fremdePfad, JSON.stringify(fremdeListe, null, 2), 'utf8');
 await seite.locator('#tab-mehr').tap();
 const [dateiwaehler] = await Promise.all([
     seite.waitForEvent('filechooser'),
-    seite.locator('button', { hasText: 'Datei einlesen' }).tap()
+    seite.getByRole('button', { name: 'Datei einlesen', exact: true }).tap()
 ]);
 await dateiwaehler.setFiles(fremdePfad);
 await seite.waitForSelector('.dialog');

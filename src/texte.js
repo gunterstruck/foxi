@@ -171,6 +171,33 @@ const DE = {
         geloescht: 'Ort entfernt'
     },
 
+    angebote: {
+        titel: 'Angebotsradar – Versuch',
+        erklaerung:
+            'Teste den Ablauf mit erfundenen Kaufgewohnheiten für 45136 Essen. ' +
+            'Foxi ruft nichts ab: Du gibst den Auftrag an einen Agenten und fügst sein Ergebnis selbst wieder ein.',
+        datenschutz:
+            'Die Wohnadresse ist nicht enthalten. Das Demo-Profil nennt nur PLZ/Ort und ausgewählte Märkte.',
+        auftragTitel: 'Foxi-Angebotsauftrag',
+        auftragKopieren: 'Demo-Auftrag kopieren',
+        auftragKopiert: 'Demo-Auftrag in der Zwischenablage',
+        ergebnisEinfuegen: 'Ergebnis einfügen',
+        ergebnisdatei: 'Ergebnisdatei einlesen',
+        ergebnisTitel: 'Agentenergebnis einfügen',
+        ergebnisPlatzhalter: '{ "typ": "foxi-angebote", … }',
+        ergebnisBeschriftung: 'JSON-Ergebnis des Angebotsagenten',
+        uebernehmen: 'Angebote übernehmen',
+        ergebnisUngueltig: 'Das ist kein gültiges Foxi-Angebotsergebnis.',
+        ergebnisZuGross: 'Die Ergebnisdatei ist zu groß.',
+        ergebnisUebernommen: (n) =>
+            n === 1 ? '1 aktuelles Angebot übernommen' : `${n} aktuelle Angebote übernommen`,
+        nochKeinErgebnis: 'Noch kein Ergebnis eingelesen.',
+        keineAktuellen: 'Das letzte Ergebnis enthält keine heute gültigen Treffer.',
+        trefferAlternative: 'Alternative',
+        gueltigBis: (datum) => `bis ${datum}`,
+        quelle: 'Quelle'
+    },
+
     zusammenfuehren: {
         titel: 'Was soll übernommen werden?',
         neu: (n) => (n === 1 ? '1 neuer Artikel' : `${n} neue Artikel`),

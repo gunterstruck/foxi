@@ -10,16 +10,20 @@
 import { t } from '../texte.js';
 import { VERSION } from '../version.js';
 import { kaufStatistik, datumDeutsch } from '../logik.js';
+import { preisDeutsch } from '../angebotsradar.js';
 import {
     zustand, alleArtikel, offeneEintraege, listeLeeren, allesZuruecksetzen,
     rezeptAnlegen, rezeptLoeschen, rezeptAufListe,
-    kategorienNeuOrdnen, kategorienZuruecksetzen, ort, ortSetzen
+    kategorienNeuOrdnen, kategorienZuruecksetzen, ort, ortSetzen, angebotsergebnis
 } from '../zustand.js';
 import { melde, zeigeBereich } from './schale.js';
 import { zeigeDialog, dialogFeld, schliesseDialog } from './dialog.js';
 import {
     teileAlsDatei, kopiereListeAlsText, kopiereStammartikel, dateiEinlesen
 } from './teilen.js';
+import {
+    aktuelleAngebote, demoAuftragKopieren, ergebnisEinfuegen, ergebnisdateiEinlesen
+} from './angebote.js';
 
 let behaelter = null;
 
@@ -36,6 +40,7 @@ export function zeichneMehr() {
         reihenfolgeKarte(),
         teilenKarte(),
         ortKarte(),
+        angebotsradarKarte(),
         statistikKarte(),
         datenKarte(),
         fusszeile()
@@ -365,6 +370,89 @@ function ortKarte() {
 
     abschnitt.append(feld);
     return abschnitt;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Angebotsradar-Pilot
+   ──────────────────────────────────────────────────────────────────────── */
+
+function angebotsradarKarte() {
+    const abschnitt = karte(t('angebote.titel'), { experte: true });
+    abschnitt.classList.add('angebote-karte');
+    abschnitt.append(absatz(t('angebote.erklaerung'), 'muted small'));
+    abschnitt.append(absatz(t('angebote.datenschutz'), 'angebote-datenschutz'));
+    abschnitt.append(knopfleiste(
+        knopf(t('angebote.auftragKopieren'), demoAuftragKopieren, { betont: true }),
+        knopf(t('angebote.ergebnisEinfuegen'), ergebnisEinfuegen),
+        knopf(t('angebote.ergebnisdatei'), ergebnisdateiEinlesen)
+    ));
+
+    const daten = angebotsergebnis();
+    if (!daten) {
+        abschnitt.append(absatz(t('angebote.nochKeinErgebnis'), 'angebote-leer muted'));
+        return abschnitt;
+    }
+
+    const angebote = aktuelleAngebote();
+    if (angebote.length === 0) {
+        abschnitt.append(absatz(t('angebote.keineAktuellen'), 'angebote-leer muted'));
+        return abschnitt;
+    }
+
+    const liste = document.createElement('ul');
+    liste.className = 'angebotsliste';
+    for (const angebot of angebote) liste.append(angebotszeile(angebot));
+    abschnitt.append(liste);
+    return abschnitt;
+}
+
+function angebotszeile(angebot) {
+    const zeile = document.createElement('li');
+
+    const kopf = document.createElement('div');
+    kopf.className = 'angebot-kopf';
+    const name = document.createElement('strong');
+    name.textContent = angebot.artikelName;
+    const preis = document.createElement('strong');
+    preis.className = 'angebot-preis';
+    preis.textContent = preisDeutsch(angebot.preis);
+    kopf.append(name, preis);
+
+    const produkt = document.createElement('span');
+    produkt.className = 'angebot-produkt';
+    produkt.textContent = angebot.produkt;
+
+    const markt = document.createElement('span');
+    markt.className = 'angebot-markt';
+    markt.textContent = `${angebot.haendler} · ${angebot.markt}`;
+
+    const details = document.createElement('span');
+    details.className = 'angebot-details';
+    const datum = datumDeutsch(new Date(`${angebot.gueltigBis}T12:00:00`));
+    details.textContent = `${angebot.menge} · ${angebot.grundpreis} · ${t('angebote.gueltigBis', datum)}`;
+
+    zeile.append(kopf, produkt, markt, details);
+
+    if (angebot.treffer === 'alternative') {
+        const marke = document.createElement('span');
+        marke.className = 'angebot-alternative';
+        marke.textContent = t('angebote.trefferAlternative');
+        zeile.append(marke);
+    }
+    if (angebot.hinweis) {
+        const hinweis = document.createElement('span');
+        hinweis.className = 'angebot-hinweis';
+        hinweis.textContent = angebot.hinweis;
+        zeile.append(hinweis);
+    }
+
+    const quelle = document.createElement('a');
+    quelle.href = angebot.quelle;
+    quelle.target = '_blank';
+    quelle.rel = 'noopener noreferrer';
+    quelle.textContent = t('angebote.quelle');
+    zeile.append(quelle);
+    return zeile;
 }
 
 /* ────────────────────────────────────────────────────────────────────────

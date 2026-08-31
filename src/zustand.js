@@ -401,6 +401,25 @@ export async function ortSetzen(wert) {
     melde('einstellungen');
 }
 
+/**
+ * Letztes eingelesenes Ergebnis des optionalen Angebotsradar-Piloten.
+ *
+ * Es liegt wie alle Einstellungen ausschließlich in IndexedDB. Foxi holt
+ * selbst keine Angebote; der Mensch fügt die geprüfte Ergebnisdatei ein.
+ */
+export function angebotsergebnis() {
+    return zustand.einstellungen.angebotsergebnis || null;
+}
+
+export async function angebotsergebnisSetzen(daten) {
+    zustand.einstellungen.angebotsergebnis = daten;
+    await db.lege(db.SPEICHER.EINSTELLUNGEN, {
+        schluessel: 'angebotsergebnis',
+        wert: daten
+    });
+    melde('angebote');
+}
+
 export async function kategorienZuruecksetzen() {
     const nachUrsprung = [...zustand.kategorien].sort(
         (a, b) => (a.ursprung ?? a.position) - (b.ursprung ?? b.position)

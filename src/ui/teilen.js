@@ -59,7 +59,7 @@ export async function teileAlsDatei() {
     }
 
     if (herunterladen(text, dateiname)) return;
-    await kopiere(text, t('teilen.kopiert'));
+    await kopiereText(text, t('teilen.kopiert'));
 }
 
 function herunterladen(text, dateiname) {
@@ -90,7 +90,7 @@ function herunterladen(text, dateiname) {
 export async function kopiereListeAlsText() {
     const eintraege = offeneEintraege();
     if (eintraege.length === 0) { melde(t('teilen.leerNichtsZuTeilen')); return; }
-    await kopiere(listeAlsText(), t('teilen.kopiert'));
+    await kopiereText(listeAlsText(), t('teilen.kopiert'));
 }
 
 /**
@@ -107,7 +107,7 @@ export async function kopiereListeAlsText() {
 export async function kopiereStammartikel() {
     const zeilen = kaufStatistik(alleArtikel(), 20);
     if (zeilen.length === 0) { melde(t('teilen.stammartikelLeer')); return; }
-    await kopiere(
+    await kopiereText(
         alsStammartikelText(zeilen, new Date(), ort()),
         t('teilen.stammartikelKopiert', zeilen.length)
     );
@@ -115,10 +115,11 @@ export async function kopiereStammartikel() {
 
 /** Langes Drücken auf eine Kachel: nur dieser eine Artikelname. */
 export async function kopiereArtikel(artikel) {
-    await kopiere(artikel.name, t('teilen.kopiertArtikel', artikel.name));
+    await kopiereText(artikel.name, t('teilen.kopiertArtikel', artikel.name));
 }
 
-async function kopiere(text, erfolgsmeldung) {
+/** Dieselbe ehrliche Ersatzkette auch für andere klar ausgelöste Exporte. */
+export async function kopiereText(text, erfolgsmeldung, dialogTitel = t('teilen.alsText')) {
     try {
         await navigator.clipboard.writeText(text);
         melde(erfolgsmeldung);
@@ -141,7 +142,7 @@ async function kopiere(text, erfolgsmeldung) {
     feld.rows = 10;
     feld.value = text;
     zeigeDialog({
-        titel: t('teilen.alsText'),
+        titel: dialogTitel,
         koerper: [feld],
         knoepfe: []
     });

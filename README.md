@@ -4,7 +4,7 @@
 ![Kein Konto](https://img.shields.io/badge/Kein%20Konto-kein%20Login%2C%20kein%20Backend-2f6f34)
 ![PWA](https://img.shields.io/badge/PWA-offlinef%C3%A4hig-purple)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-0.4.0-orange)
+![Version](https://img.shields.io/badge/Version-0.5.0-orange)
 
 **Tippen statt Tippen.**
 
@@ -99,6 +99,19 @@ Warum überhaupt vergessen? Ohne Verfall gewinnt ewig, was man einmal einen
 Monat lang täglich gekauft hat – und die Kachel steht noch oben, wenn das Kind
 längst ausgezogen ist.
 
+### Angebotsradar als klar gekennzeichneter Versuch
+
+Im Expertenmodus lässt sich ein persönliches Angebotsradar erproben, ohne
+Foxis Netzwerkregel aufzuweichen. Ein erfundenes Demo-Profil für `45136 Essen`
+wird zu einem Rechercheauftrag für einen frei gewählten Agenten. Dessen
+strukturiertes Ergebnis lässt sich anschließend als Text oder Datei wieder
+einlesen und wird vor der Anzeige streng geprüft.
+
+Foxi recherchiert dabei nicht selbst. Es bleibt die lokale Seite der Brücke:
+Bedarf hinaus, geprüfte Treffer herein – beides nur nach einer bewussten
+Handlung. Der vollständige Versuchsablauf steht unter
+[docs/angebotsradar-pilot.md](docs/angebotsradar-pilot.md).
+
 ---
 
 ## Basis und Experte
@@ -116,6 +129,7 @@ sichtbare Komplexität.
 | Teilen, Export und Import | – | ✅ |
 | Briefing-Export als Klartext | – | ✅ |
 | Stammartikel-Export | – | ✅ |
+| Angebotsradar-Pilot | – | ✅ |
 | Ort für die Texte hinterlegen | – | ✅ |
 | Statistik | – | ✅ |
 
@@ -175,13 +189,13 @@ der Adresse erreichbar. Das ist kein Leck – dieselben Dateien liegen ohnehin
 ### Prüfen
 
 ```bash
-npm install && npm test          # 48 Unit-Tests (Sortierung, Suche, Gruppierung, Export, Import, Daten)
+npm install && npm test          # 55 Unit-Tests (Sortierung, Suche, Gruppierung, Export, Import, Daten)
 
 npm i --no-save playwright && npx playwright install chromium
 node tools/durchlauf.mjs         # Prüfstrecke im echten Browser + Bilder
 ```
 
-Die Prüfstrecke (39 Prüfungen) fährt die Abnahmekriterien ab, die man mit
+Die Prüfstrecke (44 Prüfungen) fährt die Abnahmekriterien ab, die man mit
 Unit-Tests nicht erreicht: die Zwei-Tipp-Regel, zehn simulierte Einkäufe, den
 verlustfreien Moduswechsel, Rezepte, das Ziehen der Kategorien mit Zeiger und
 mit Tastatur, den Briefing-Export aus der echten Zwischenablage und einen
@@ -300,10 +314,11 @@ Zeile zwei des Textes. Foxi schlägt damit nichts nach und schickt nichts weg.
 
 ## Stand und was als Nächstes kommt
 
-**Gebaut (v0.2.0):** Version 1 ist inhaltlich vollständig – Basismodus,
+**Gebaut (v0.5.0):** Version 1 ist inhaltlich vollständig – Basismodus,
 lernender Katalog, Rezepte, Kategorie-Reihenfolge per Ziehen, Teilen als
 Datei mit Zusammenführung beim Import, Briefing-Export, Statistik,
-Offlinebetrieb, Installierbarkeit.
+Offlinebetrieb, Installierbarkeit. Der Angebotsradar ist als ausdrücklich
+gekennzeichneter Pilot hinzugekommen; er ist noch keine Händleranbindung.
 
 **Als Nächstes:** auf echten Geräten fahren. Die Prüfstrecke läuft in
 Chromium; die Emoji stammen aber aus der Schrift des Betriebssystems, und

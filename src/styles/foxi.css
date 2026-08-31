@@ -561,6 +561,66 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
     border-radius: var(--radius-m);
 }
 
+/* Angebotsradar-Pilot ─────────────────────────────────────────────────── */
+
+.angebote-datenschutz {
+    padding: 8px 10px;
+    border-radius: var(--radius-m);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark) !important;
+    font-size: 0.8rem !important;
+}
+.angebote-leer { margin-top: 12px !important; }
+.angebotsliste {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.angebotsliste li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 11px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-m);
+    background: var(--color-surface-2);
+    font-size: 0.82rem;
+}
+.angebot-kopf {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--color-text);
+}
+.angebot-preis { color: var(--color-primary-dark); white-space: nowrap; }
+.angebot-produkt { color: var(--color-text); }
+.angebot-markt,
+.angebot-details,
+.angebot-hinweis { color: var(--color-text-muted); line-height: 1.35; }
+.angebot-alternative {
+    align-self: flex-start;
+    padding: 2px 7px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.angebotsliste a {
+    align-self: flex-start;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-primary-dark);
+    font-weight: 700;
+}
+.angebote-eingabe { min-height: 220px; }
+
 /* Statistik ───────────────────────────────────────────────────────────── */
 
 .statistikliste {

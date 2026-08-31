@@ -11,7 +11,7 @@
  * eine neue `CACHE`-Nummer herein.
  */
 
-const CACHE = 'einkaufsfuchs-v0.4.0';
+const CACHE = 'einkaufsfuchs-v0.5.0';
 
 const SCHALE = [
     './',
@@ -24,6 +24,7 @@ const SCHALE = [
     'src/app.js',
     'src/texte.js',
     'src/logik.js',
+    'src/angebotsradar.js',
     'src/db.js',
     'src/zustand.js',
     'src/version.js',
@@ -33,6 +34,7 @@ const SCHALE = [
     'src/ui/mehr.js',
     'src/ui/dialog.js',
     'src/ui/teilen.js',
+    'src/ui/angebote.js',
     'src/daten/katalog.json',
     'src/daten/rezepte.json',
     'icons/foxi.svg',
