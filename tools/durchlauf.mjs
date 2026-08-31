@@ -355,7 +355,17 @@ await seite.locator('#tab-mehr').tap();
 await seite.waitForSelector('.statistikliste');
 const stat = await seite.locator('.statistikliste li').first().textContent();
 pruefe(/10×/.test(stat || ''), `Die Statistik zählt die zehn Einkäufe (${stat?.trim()})`);
-await seite.screenshot({ path: join(bilder, '11-statistik.png'), fullPage: true });
+/* `fullPage` bringt hier nichts: Bei Foxi scrollt nicht die Seite, sondern
+   der Bereich darin (`.bereich` liegt absolut mit eigenem Überlauf). Ein
+   Ganzseiten-Bild zeigt deshalb nur den Ausschnitt am Anfang – hin scrollen
+   ist der einzige Weg zu einem Bild, das hält, was der Dateiname verspricht. */
+await seite.locator('.statistikliste').scrollIntoViewIfNeeded();
+await seite.waitForTimeout(150);
+await seite.screenshot({ path: join(bilder, '11-statistik.png') });
+
+await seite.locator('.ort-feld').scrollIntoViewIfNeeded();
+await seite.waitForTimeout(150);
+await seite.screenshot({ path: join(bilder, '12-ort-und-teilen.png') });
 
 /* ── Netz und Regeln ────────────────────────────────────────────────────── */
 pruefe(fremdeAnfragen.length === 0,

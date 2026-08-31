@@ -26,6 +26,12 @@
     grid-template-rows: var(--topbar-height) 1fr auto;
     overflow: hidden;
     overscroll-behavior: none;
+    /* Der blaue Standard-Schimmer, den mobile Browser über jedes angetippte
+       Element legen, arbeitet gegen das Grün – und er kommt zu spät, um als
+       Rückmeldung zu taugen. Foxi antwortet stattdessen mit dem, was das
+       Element selbst tut: Die Kachel schrumpft unter dem Finger, die Zeile
+       färbt sich, der Reiter füllt sich. */
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Kopfbereich – Form aus TourFuchs, nur der Leitton ist grün. */
@@ -668,6 +674,7 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
 }
 .tab .tab-icon { font-size: 1.25rem; line-height: 1; }
 .tab:hover:not(.active) { background: var(--color-surface-2); }
+.tab:active { background: var(--color-primary-light); }
 .tab.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
 .tab:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
 
