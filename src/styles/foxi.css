@@ -534,6 +534,13 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
 .zieh-icon { font-size: 1.1rem; }
 .zieh-name { font-weight: 600; }
 
+/* Ort ─────────────────────────────────────────────────────────────────── */
+
+.ort-feld {
+    min-height: 46px;
+    border-radius: var(--radius-m);
+}
+
 /* Statistik ───────────────────────────────────────────────────────────── */
 
 .statistikliste {

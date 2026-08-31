@@ -4,7 +4,7 @@
 ![Kein Konto](https://img.shields.io/badge/Kein%20Konto-kein%20Login%2C%20kein%20Backend-2f6f34)
 ![PWA](https://img.shields.io/badge/PWA-offlinef%C3%A4hig-purple)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-0.2.0-orange)
+![Version](https://img.shields.io/badge/Version-0.3.0-orange)
 
 **Tippen statt Tippen.**
 
@@ -93,6 +93,8 @@ sichtbare Komplexität.
 | Kategorie-Reihenfolge ziehen | – | ✅ |
 | Teilen, Export und Import | – | ✅ |
 | Briefing-Export als Klartext | – | ✅ |
+| Stammartikel-Export | – | ✅ |
+| Ort für die Texte hinterlegen | – | ✅ |
 | Statistik | – | ✅ |
 
 Der Wechsel ist jederzeit und **verlustfrei** möglich, und zwar wörtlich: Er
@@ -151,13 +153,13 @@ der Adresse erreichbar. Das ist kein Leck – dieselben Dateien liegen ohnehin
 ### Prüfen
 
 ```bash
-npm install && npm test          # 42 Unit-Tests (Sortierung, Suche, Gruppierung, Export, Import, Daten)
+npm install && npm test          # 48 Unit-Tests (Sortierung, Suche, Gruppierung, Export, Import, Daten)
 
 npm i --no-save playwright && npx playwright install chromium
 node tools/durchlauf.mjs         # Prüfstrecke im echten Browser + Bilder
 ```
 
-Die Prüfstrecke (29 Prüfungen) fährt die Abnahmekriterien ab, die man mit
+Die Prüfstrecke (35 Prüfungen) fährt die Abnahmekriterien ab, die man mit
 Unit-Tests nicht erreicht: die Zwei-Tipp-Regel, zehn simulierte Einkäufe, den
 verlustfreien Moduswechsel, Rezepte, das Ziehen der Kategorien mit Zeiger und
 mit Tastatur, den Briefing-Export aus der echten Zwischenablage und einen
@@ -258,6 +260,19 @@ Eine eingebaute Angebotsfunktion wäre in beide Richtungen der schlechtere
 Tausch: Sie bräuchte eine Netzverbindung, einen Anbieter und eine
 Rechtsprüfung – und sie wäre in dem Moment veraltet, in dem die Agenten einen
 Schritt weiter sind.
+
+**Zwei Exporte, zwei Fragen.** „Liste als Text kopieren" beantwortet, was
+heute fehlt. „Stammartikel kopieren" beantwortet die interessantere Frage:
+was dieser Haushalt *immer* braucht, mit der Kaufzahl dahinter
+(`Milch (23×), Kaffee (11×), …`). Erst damit lässt sich draußen fragen, ob
+etwas davon gerade billiger ist – und das ist die Frage, die man sich selbst
+nicht beantworten kann, weil ihre Antwort jede Woche wechselt.
+
+Dazu gibt es im Expertenmodus ein Feld für **Postleitzahl und Ort**. Es ist
+das einzige Feld in Foxi, das über das Gerät hinausweist – und auch das nur,
+weil ein Mensch den kopierten Text selbst weitergibt. Ohne Ortsangabe weiß
+das Gegenüber nicht, um welche Läden es überhaupt geht; mit ihr steht sie in
+Zeile zwei des Textes. Foxi schlägt damit nichts nach und schickt nichts weg.
 
 ---
 

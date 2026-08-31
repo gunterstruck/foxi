@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
     kaufScore, sortiereArtikel, oftGebraucht, sucheArtikel,
-    gruppiereListe, alsKlartext, TAG_MS, HALBWERTSZEIT_TAGE
+    gruppiereListe, alsKlartext, alsStammartikelText, kaufStatistik,
+    TAG_MS, HALBWERTSZEIT_TAGE
 } from '../src/logik.js';
 
 const JETZT = new Date('2026-08-30T10:00:00Z').getTime();
@@ -206,6 +207,20 @@ describe('Klartext-Export', () => {
         expect(text.trim().endsWith('Molkerei: Milch')).toBe(true);
     });
 
+    it('trägt den Ort nur, wenn einer hinterlegt ist', () => {
+        const gruppen = gruppiereListe(
+            [{ artikelId: 'milch', menge: '', notiz: '' }],
+            artikelNachId,
+            kategorien
+        );
+        const ohne = alsKlartext(gruppen, new Date('2026-08-30T12:00:00'));
+        expect(ohne.split('\n')[1]).toBe('');
+
+        const mit = alsKlartext(gruppen, new Date('2026-08-30T12:00:00'), '45136 Essen');
+        expect(mit.split('\n')[1]).toBe('Ort: 45136 Essen');
+        expect(mit.split('\n')[2]).toBe('');
+    });
+
     it('nimmt Menge und Notiz gemeinsam in die Klammer', () => {
         const gruppen = gruppiereListe(
             [{ artikelId: 'milch', menge: '2', notiz: 'laktosefrei' }],
@@ -214,5 +229,49 @@ describe('Klartext-Export', () => {
         );
         expect(alsKlartext(gruppen, new Date('2026-08-30T12:00:00')))
             .toContain('Milch (2, laktosefrei)');
+    });
+});
+
+describe('Stammartikel-Export', () => {
+    const artikelMitHistorie = (id, name, kaeufe) => ({
+        id, name, kategorieId: 'obst', icon: '🛒', letzteKaeufe: kaeufe
+    });
+    const katalog = [
+        artikelMitHistorie('milch', 'Milch', Array.from({ length: 10 }, (_, i) => JETZT - i * TAG_MS)),
+        artikelMitHistorie('brot', 'Brot', Array.from({ length: 4 }, (_, i) => JETZT - i * TAG_MS)),
+        artikelMitHistorie('kapern', 'Kapern', [])
+    ];
+
+    it('nennt jeden Artikel mit seiner Kaufzahl, häufigste zuerst', () => {
+        const text = alsStammartikelText(
+            kaufStatistik(katalog, 20), new Date('2026-08-30T12:00:00')
+        );
+        expect(text).toBe(
+            ['Stammartikel (Foxi, Stand 30.08.2026)', '', 'Milch (10×), Brot (4×)'].join('\n')
+        );
+    });
+
+    it('lässt nie Gekauftes weg', () => {
+        const text = alsStammartikelText(kaufStatistik(katalog, 20), new Date());
+        expect(text).not.toContain('Kapern');
+    });
+
+    it('nimmt den Ort mit, wenn er gesetzt ist', () => {
+        const text = alsStammartikelText(
+            kaufStatistik(katalog, 20), new Date('2026-08-30T12:00:00'), '45136 Essen'
+        );
+        expect(text.split('\n')[1]).toBe('Ort: 45136 Essen');
+    });
+
+    /* Auch dieser Export bleibt ein reiner Befund. Wer ihn einfügt, schreibt
+       selbst dazu, was er wissen will. */
+    it('hängt keine Frage an', () => {
+        const text = alsStammartikelText(kaufStatistik(katalog, 20), new Date(), '45136 Essen');
+        expect(text).not.toMatch(/\?/);
+    });
+
+    it('bleibt bei leerer Historie ein leerer, aber gültiger Text', () => {
+        const text = alsStammartikelText([], new Date('2026-08-30T12:00:00'));
+        expect(text.split('\n')[0]).toBe('Stammartikel (Foxi, Stand 30.08.2026)');
     });
 });

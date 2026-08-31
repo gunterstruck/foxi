@@ -1,6 +1,6 @@
 {
   "name": "foxi",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Foxi – Einkaufsliste für Haushalt, Familie und WG. PWA, alle Daten bleiben auf dem Gerät.",
   "type": "module",
   "private": true,

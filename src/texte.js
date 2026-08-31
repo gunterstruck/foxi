@@ -136,7 +136,23 @@ const DE = {
         geladen: 'Datei geladen',
         keineFoxiDatei: 'Das ist keine Foxi-Datei.',
         kaputteDatei: 'Die Datei lässt sich nicht lesen.',
-        langDrueckenHinweis: 'Lange auf eine Kachel drücken kopiert den Artikelnamen.'
+        langDrueckenHinweis: 'Lange auf eine Kachel drücken kopiert den Artikelnamen.',
+        stammartikel: 'Stammartikel kopieren',
+        stammartikelLeer: 'Dafür muss erst ein paar Mal abgehakt worden sein.',
+        stammartikelKopiert: (n) =>
+            n === 1 ? '1 Stammartikel in der Zwischenablage' : `${n} Stammartikel in der Zwischenablage`
+    },
+
+    ort: {
+        titel: 'Dein Ort',
+        erklaerung:
+            'Nur für die Texte, die du selbst weitergibst: Steht hier eine Postleitzahl, ' +
+            'trägt sie der kopierte Text mit – dann weiß das Gegenüber, um welche Läden es geht. ' +
+            'Foxi selbst fragt damit nichts ab und schickt nichts weg.',
+        platzhalter: 'z. B. 45136 Essen',
+        beschriftung: 'Postleitzahl und Ort',
+        gemerkt: 'Ort gemerkt',
+        geloescht: 'Ort entfernt'
     },
 
     zusammenfuehren: {

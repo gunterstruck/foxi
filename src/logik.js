@@ -113,8 +113,14 @@ export function gruppiereListe(eintraege, artikelNachId, kategorien) {
  * selbst dazu, was er wissen will – „was koche ich daraus", „was fehlt noch",
  * „erklär mir Sardellenpaste". So altert die Funktion nicht mit den Modellen.
  */
-export function alsKlartext(gruppen, datum = new Date()) {
-    const kopf = `Einkaufsliste (${datumDeutsch(datum)})`;
+export function alsKlartext(gruppen, datum = new Date(), ort = '') {
+    const kopf = [`Einkaufsliste (${datumDeutsch(datum)})`];
+    /* Die Ortszeile steht nur da, wenn jemand einen Ort hinterlegt hat. Foxi
+       ermittelt ihn nicht und fragt ihn nirgends ab – er steht in den
+       Einstellungen, weil er im weitergegebenen Text nützlich ist: Ohne ihn
+       weiß das Gegenüber nicht, um welche Läden es überhaupt geht. */
+    if (ort) kopf.push(`Ort: ${ort}`);
+
     const zeilen = gruppen.map((gruppe) => {
         const teile = gruppe.eintraege.map((e) => {
             const zusatz = [e.menge, e.notiz].filter(Boolean).join(', ');
@@ -122,7 +128,29 @@ export function alsKlartext(gruppen, datum = new Date()) {
         });
         return `${gruppe.kategorie.name}: ${teile.join(', ')}`;
     });
-    return [kopf, '', ...zeilen].join('\n');
+    return [...kopf, '', ...zeilen].join('\n');
+}
+
+/**
+ * Der zweite Klartext-Export: nicht was heute fehlt, sondern was dieser
+ * Haushalt **immer** braucht.
+ *
+ * Das ist die interessantere Frage nach draußen. „Was steht auf meiner Liste"
+ * beantwortet man sich selbst; „ist etwas von dem, was ich ständig kaufe,
+ * gerade billiger" kann man ohne Hilfe gar nicht beantworten – und die
+ * Antwort ändert sich jede Woche.
+ *
+ * Die Zahl in Klammern ist keine Zierde: Sie sagt dem Gegenüber, wie ernst
+ * ein Artikel gemeint ist. Ein 40× gekaufter Kaffee wiegt anders als etwas,
+ * das zweimal vorkam.
+ *
+ * Auch hier: keine vorformulierte Frage. Nur der Befund.
+ */
+export function alsStammartikelText(zeilen, datum = new Date(), ort = '') {
+    const kopf = [`Stammartikel (Foxi, Stand ${datumDeutsch(datum)})`];
+    if (ort) kopf.push(`Ort: ${ort}`);
+    const namen = zeilen.map((z) => `${z.artikel.name} (${z.anzahl}×)`);
+    return [...kopf, '', namen.join(', ')].join('\n');
 }
 
 export function datumDeutsch(datum = new Date()) {
