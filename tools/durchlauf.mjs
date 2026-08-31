@@ -81,6 +81,16 @@ await seite.goto(ADRESSE, { waitUntil: 'networkidle' });
 await seite.waitForSelector('.leer');
 
 pruefe(await seite.locator('.leer h2').isVisible(), 'Erststart zeigt den leeren Zustand');
+
+/* Die zwei Namen: Auf dem Handy die Kurzform, und der Kopf darf dabei nicht
+   überlaufen – er teilt sich die Zeile mit dem Tiefenschalter. */
+pruefe(await seite.locator('.brand-kurz').isVisible() && !(await seite.locator('.brand-lang').isVisible()),
+    'Auf dem Handy steht „Foxi" in der Kopfzeile');
+const kopfPasst = await seite.evaluate(() => {
+    const leiste = document.querySelector('.topbar');
+    return leiste.scrollWidth <= leiste.clientWidth + 1;
+});
+pruefe(kopfPasst, 'Die Kopfzeile läuft nicht über');
 await seite.screenshot({ path: join(bilder, '01-liste-leer.png') });
 
 /* ── Zwei Tipps ─────────────────────────────────────────────────────────── */
@@ -289,7 +299,7 @@ pruefe(ausDerZwischenablage.split('\n')[1] === 'Ort: 45136 Essen',
 await seite.locator('button', { hasText: 'Stammartikel kopieren' }).tap();
 await seite.waitForTimeout(300);
 const stammtext = await seite.evaluate(() => navigator.clipboard.readText());
-pruefe(/^Stammartikel \(Foxi, Stand \d{2}\.\d{2}\.\d{4}\)\nOrt: 45136 Essen\n\n/.test(stammtext),
+pruefe(/^Stammartikel \(EinkaufsFuchs, Stand \d{2}\.\d{2}\.\d{4}\)\nOrt: 45136 Essen\n\n/.test(stammtext),
     'Der Stammartikel-Export trägt Kopf und Ort');
 /* Nach zehn Einkäufen von Milch, Brot und Butter müssen genau die vorn
    stehen – das ist derselbe Befund wie im Katalog, nur als Text zum
@@ -366,6 +376,18 @@ await seite.screenshot({ path: join(bilder, '11-statistik.png') });
 await seite.locator('.ort-feld').scrollIntoViewIfNeeded();
 await seite.waitForTimeout(150);
 await seite.screenshot({ path: join(bilder, '12-ort-und-teilen.png') });
+
+/* ── Der volle Name auf dem breiten Schirm ──────────────────────────────── */
+await seite.setViewportSize({ width: 768, height: 900 });
+await seite.waitForTimeout(200);
+pruefe(await seite.locator('.brand-lang').isVisible() && !(await seite.locator('.brand-kurz').isVisible()),
+    'Ab 420 px steht „EinkaufsFuchs" in der Kopfzeile');
+const kopfPasstBreit = await seite.evaluate(() => {
+    const leiste = document.querySelector('.topbar');
+    return leiste.scrollWidth <= leiste.clientWidth + 1;
+});
+pruefe(kopfPasstBreit, 'Auch mit vollem Namen läuft die Kopfzeile nicht über');
+await seite.screenshot({ path: join(bilder, '13-name-breit.png') });
 
 /* ── Netz und Regeln ────────────────────────────────────────────────────── */
 pruefe(fremdeAnfragen.length === 0,

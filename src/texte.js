@@ -5,16 +5,32 @@
  * soll später keine Suche durch dreißig Dateien werden. Deshalb steht hier
  * jeder Satz, den ein Mensch zu sehen bekommt, und nirgendwo sonst.
  *
- * Eine Ausnahme, bewusst: „Foxi" wird nicht übersetzt. Der Name ist der Name.
+ * Zwei Ausnahmen, bewusst: „EinkaufsFuchs" und „Foxi" werden nicht übersetzt.
+ * Der Name ist der Name.
  */
 
 export const SPRACHE = 'de';
 
 const DE = {
+    /**
+     * Zwei Namen für dieselbe App – und eine Regel, wann welcher gilt.
+     *
+     * `name` steht dort, wo die App sich vorstellt: Fenstertitel,
+     * Startbildschirm-Eintrag, Fußzeile, weitergegebene Texte. Er stellt sie
+     * neben TourFuchs und SoundFuchs, wo sie hingehört.
+     *
+     * `kurz` steht dort, wo sie benutzt wird. „Hol das mal in Foxi rein"
+     * sagt sich leichter als das Kompositum, und in einer Kopfzeile von
+     * 360 px konkurriert er nicht mit dem Tiefenschalter.
+     *
+     * `anspruch` gehört nur zur Kurzform: Neben „EinkaufsFuchs" wäre
+     * „Einkauf" eine Wiederholung.
+     */
     app: {
-        name: 'Foxi',
+        name: 'EinkaufsFuchs',
+        kurz: 'Foxi',
         anspruch: 'Einkauf',
-        titel: 'Foxi – Einkaufsliste'
+        titel: 'EinkaufsFuchs – Einkaufsliste'
     },
 
     tiefe: {
@@ -71,11 +87,11 @@ const DE = {
 
     mehr: {
         titel: 'Mehr',
-        ueberTitel: 'Über Foxi',
+        ueberTitel: 'Über EinkaufsFuchs',
         ueberText:
-            'Foxi ist eine Einkaufsliste für den Haushalt. Alles, was du eingibst, ' +
-            'bleibt auf diesem Gerät: kein Konto, kein Login, keine Cloud, keine Werbung, ' +
-            'keine Auswertung. Foxi funktioniert ohne Internet.',
+            'EinkaufsFuchs – kurz Foxi – ist eine Einkaufsliste für den Haushalt. ' +
+            'Alles, was du eingibst, bleibt auf diesem Gerät: kein Konto, kein Login, ' +
+            'keine Cloud, keine Werbung, keine Auswertung. Foxi funktioniert ohne Internet.',
         datenTitel: 'Deine Daten',
         listeLeeren: 'Liste leeren',
         listeLeerenFrage: 'Alle Artikel von der Liste nehmen?',
@@ -127,14 +143,14 @@ const DE = {
         alsDatei: 'Liste als Datei teilen',
         alsText: 'Liste als Text kopieren',
         importieren: 'Datei einlesen',
-        dateiName: (datum) => `foxi-liste-${datum}.json`,
+        dateiName: (datum) => `einkaufsfuchs-liste-${datum}.json`,
         kopiert: 'Liste in der Zwischenablage',
         kopiertArtikel: (name) => `„${name}" kopiert`,
         geteilt: 'Geteilt',
         abgebrochen: 'Nicht geteilt',
         leerNichtsZuTeilen: 'Die Liste ist leer.',
         geladen: 'Datei geladen',
-        keineFoxiDatei: 'Das ist keine Foxi-Datei.',
+        keineFoxiDatei: 'Das ist keine EinkaufsFuchs-Datei.',
         kaputteDatei: 'Die Datei lässt sich nicht lesen.',
         langDrueckenHinweis: 'Lange auf eine Kachel drücken kopiert den Artikelnamen.',
         stammartikel: 'Stammartikel kopieren',

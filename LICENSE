@@ -22,7 +22,7 @@ SOFTWARE.
 
 -------------------------------------------------------------------------------
 
-Foxi bindet keine fremden Bibliotheken, Geodaten oder Kartendienste ein. Die
+EinkaufsFuchs bindet keine fremden Bibliotheken, Geodaten oder Kartendienste ein. Die
 Lizenz oben gilt damit fuer alles, was in diesem Repository liegt.
 
 Die Gestaltungsgrundlage in src/styles/stamm/ stammt aus TourFuchs

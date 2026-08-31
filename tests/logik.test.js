@@ -247,7 +247,7 @@ describe('Stammartikel-Export', () => {
             kaufStatistik(katalog, 20), new Date('2026-08-30T12:00:00')
         );
         expect(text).toBe(
-            ['Stammartikel (Foxi, Stand 30.08.2026)', '', 'Milch (10×), Brot (4×)'].join('\n')
+            ['Stammartikel (EinkaufsFuchs, Stand 30.08.2026)', '', 'Milch (10×), Brot (4×)'].join('\n')
         );
     });
 
@@ -272,6 +272,6 @@ describe('Stammartikel-Export', () => {
 
     it('bleibt bei leerer Historie ein leerer, aber gültiger Text', () => {
         const text = alsStammartikelText([], new Date('2026-08-30T12:00:00'));
-        expect(text.split('\n')[0]).toBe('Stammartikel (Foxi, Stand 30.08.2026)');
+        expect(text.split('\n')[0]).toBe('Stammartikel (EinkaufsFuchs, Stand 30.08.2026)');
     });
 });

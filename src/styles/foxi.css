@@ -60,6 +60,20 @@
 .brand-icon { font-size: 1.25rem; }
 .brand em { font-style: normal; color: var(--color-primary); font-weight: 600; }
 
+/* Der volle Name erscheint erst, wenn er neben den Tiefenschalter passt.
+   Die Schwelle ist gemessen, nicht geraten: „EinkaufsFuchs" und die Pille
+   brauchen zusammen rund 350 px; unter 420 px wird es eng, sobald die
+   Systemschrift größer eingestellt ist. Darunter steht die Kurzform, und
+   die trägt dann den Zusatz „Einkauf" – neben dem vollen Namen wäre er
+   eine Wiederholung. */
+.brand-lang { display: none; }
+.brand-kurz { display: inline; }
+
+@media (min-width: 420px) {
+    .brand-lang { display: inline; }
+    .brand-kurz { display: none; }
+}
+
 /* Der Tiefenschalter. Identisch zu `.depth-switch.seg-toggle` in TourFuchs und
    SoundFuchs – dieselbe Pille, dieselbe aktive Fläche, dieselben Radien. */
 .depth-switch {

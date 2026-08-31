@@ -7,7 +7,7 @@
          Home-Balkens, und der unterste Knopf ist nur mit Glück zu treffen. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#3f9142">
-    <meta name="description" content="Foxi – Einkaufsliste für Haushalt, Familie und WG. Alle Daten bleiben auf dem Gerät.">
+    <meta name="description" content="EinkaufsFuchs – Einkaufsliste für Haushalt, Familie und WG. Alle Daten bleiben auf dem Gerät.">
     <meta name="color-scheme" content="light">
 
     <!-- iOS: ohne diese beiden Zeilen startet die installierte App in einer
@@ -17,7 +17,7 @@
     <meta name="apple-mobile-web-app-title" content="Foxi">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-    <title>Foxi – Einkaufsliste</title>
+    <title>EinkaufsFuchs – Einkaufsliste</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/foxi.svg" type="image/svg+xml">
     <link rel="stylesheet" href="src/styles/stamm/variables.css">
@@ -38,9 +38,23 @@
              sichtbar sein.
              ══════════════════════════════════════════════════════════════ -->
         <header class="topbar">
+            <!-- Zwei Namen, einer sichtbar.
+
+                 Der volle Name stellt die App neben TourFuchs und SoundFuchs;
+                 die Kurzform ist die, die im Haushalt benutzt wird – und die
+                 einzige, die auf 360 px neben den Tiefenschalter passt.
+
+                 Der jeweils andere steht auf `display: none` und damit auch
+                 nicht im Barrierebaum: Vorlesehilfen bekommen genau einen
+                 Namen zu hören, nicht zwei. Deshalb braucht es hier kein
+                 einziges `aria`-Attribut. -->
             <div class="brand">
                 <span class="brand-icon" aria-hidden="true">🦊</span>
-                <span class="brand-name">Foxi <em data-text="app.anspruch">Einkauf</em></span>
+                <span class="brand-name brand-lang" data-text="app.name">EinkaufsFuchs</span>
+                <span class="brand-name brand-kurz">
+                    <span data-text="app.kurz">Foxi</span>
+                    <em data-text="app.anspruch">Einkauf</em>
+                </span>
             </div>
             <div class="depth-switch seg-toggle" id="modus-schalter" role="group"
                  data-titel="tiefe.hinweis" data-beschriftung="tiefe.beschriftung">

@@ -147,7 +147,9 @@ export function alsKlartext(gruppen, datum = new Date(), ort = '') {
  * Auch hier: keine vorformulierte Frage. Nur der Befund.
  */
 export function alsStammartikelText(zeilen, datum = new Date(), ort = '') {
-    const kopf = [`Stammartikel (Foxi, Stand ${datumDeutsch(datum)})`];
+    /* Nach draußen der volle Name: Wer den Text bekommt, soll wissen, woher
+       er kommt – „Foxi" allein sagt einem Fremden nichts. */
+    const kopf = [`Stammartikel (EinkaufsFuchs, Stand ${datumDeutsch(datum)})`];
     if (ort) kopf.push(`Ort: ${ort}`);
     const namen = zeilen.map((z) => `${z.artikel.name} (${z.anzahl}×)`);
     return [...kopf, '', namen.join(', ')].join('\n');
@@ -180,6 +182,10 @@ export function datumFuerDateiname(datum = new Date()) {
    eine Liste weitergibt, gibt nicht mit, wie oft er Bier kauft.
    ──────────────────────────────────────────────────────────────────────── */
 
+/* Auch die Kennung im Dateikopf bleibt, wie sie ist. Sie steht in jeder
+   bereits exportierten Datei; änderte man sie, wiese Foxi seine eigenen
+   älteren Dateien als „fremd" ab. Der Dateiname trägt den neuen Namen –
+   das ist der Teil, den ein Mensch sieht. */
 export const DATEI_TYP = 'foxi-liste';
 export const DATEI_VERSION = 1;
 
