@@ -11,6 +11,7 @@ import { schaleVerdrahten, zeigeBereich, aktiverBereich, beiBereichswechsel } fr
 import { listeVerdrahten, zeichneListe } from './ui/liste.js';
 import { katalogVerdrahten, zeichneKatalog, synchronisiereKacheln } from './ui/katalog.js';
 import { mehrVerdrahten, zeichneMehr } from './ui/mehr.js';
+import { initPwaUpdate } from './pwa-update.js';
 
 /* Welcher Bildschirm ist gegenüber dem Zustand veraltet? Ein Bereich, den
    niemand ansieht, wird nicht gezeichnet – er merkt sich nur, dass er es
@@ -67,13 +68,6 @@ los().catch((fehler) => {
     }
 });
 
-/* Der Service Worker macht Foxi offlinefähig und installierbar. Über
-   `file://` gibt es keinen – dann läuft die App trotzdem, nur ohne
-   Zwischenspeicher. */
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch((fehler) => {
-            console.warn('[Foxi] Service Worker nicht registriert', fehler);
-        });
-    });
-}
+/* Über `file://` läuft Foxi weiterhin ohne Service Worker. Unter HTTP(S)
+   übernimmt dieses Modul Offline-Speicher und den vollständigen Updateweg. */
+initPwaUpdate();

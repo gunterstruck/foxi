@@ -3,15 +3,15 @@
  *
  * Im Supermarkt ist das Netz schlecht oder gar nicht da; im Keller eines
  * Getränkemarktes ist es zuverlässig weg. Deshalb liegt die ganze App im
- * Zwischenspeicher, und geladen wird zuerst von dort – nicht aus dem Netz
- * mit dem Zwischenspeicher als Notnagel, sondern umgekehrt.
+ * Zwischenspeicher. Statische Bausteine kommen daraus, Seitenstarts prüfen
+ * bei vorhandenem Netz zuerst den veröffentlichten Stand.
  *
- * Das ist gefahrlos, weil Foxi keine fremden Inhalte anzeigt: Es gibt nichts
- * Aktuelleres im Netz als das, was hier liegt. Neue Fassungen kommen über
- * eine neue `CACHE`-Nummer herein.
+ * Das ist gefahrlos, weil Foxi keine fremden Inhalte anzeigt. Bei einem
+ * Seitenstart wird online trotzdem zuerst der aktuelle Stand geholt; ohne
+ * Netz fällt Foxi auf die vollständige App-Schale zurück.
  */
 
-const CACHE = 'einkaufsfuchs-v0.5.0';
+const CACHE = 'einkaufsfuchs-v0.6.0';
 
 const SCHALE = [
     './',
@@ -22,6 +22,7 @@ const SCHALE = [
     'src/styles/stamm/base.css',
     'src/styles/foxi.css',
     'src/app.js',
+    'src/pwa-update.js',
     'src/texte.js',
     'src/logik.js',
     'src/angebotsradar.js',
@@ -37,11 +38,11 @@ const SCHALE = [
     'src/ui/angebote.js',
     'src/daten/katalog.json',
     'src/daten/rezepte.json',
-    'icons/foxi.svg',
-    'icons/icon-192.png',
-    'icons/icon-512.png',
-    'icons/maskable-512.png',
-    'icons/apple-touch-icon.png'
+    'icons/foxi.svg?v=0.6.0',
+    'icons/icon-192.png?v=0.6.0',
+    'icons/icon-512.png?v=0.6.0',
+    'icons/maskable-512.png?v=0.6.0',
+    'icons/apple-touch-icon.png?v=0.6.0'
 ];
 
 self.addEventListener('install', (ereignis) => {
@@ -55,10 +56,32 @@ self.addEventListener('install', (ereignis) => {
 self.addEventListener('activate', (ereignis) => {
     ereignis.waitUntil(
         caches.keys()
-            .then((namen) => Promise.all(
-                namen.filter((name) => name !== CACHE).map((name) => caches.delete(name))
-            ))
-            .then(() => self.clients.claim())
+            .then(async (namen) => {
+                const alteNamen = namen.filter(
+                    (name) => name.startsWith('einkaufsfuchs-') && name !== CACHE
+                );
+                await Promise.all(alteNamen.map((name) => caches.delete(name)));
+                await self.clients.claim();
+
+                /* Wichtig für die Fassung, die diesen Updateweg noch nicht
+                   kennt: Sobald der neue Worker eine alte Foxi-Schale ersetzt,
+                   lädt er bereits offene Fenster selbst neu. Beim allerersten
+                   Installieren gibt es keinen alten Cache und keinen unnötigen
+                   Neustart. IndexedDB bleibt davon vollständig unberührt. */
+                if (alteNamen.length === 0) return;
+                const fenster = await self.clients.matchAll({
+                    type: 'window',
+                    includeUncontrolled: true
+                });
+                await Promise.all(fenster.map(async (client) => {
+                    try {
+                        await client.navigate(client.url);
+                    } catch {
+                        /* `controllerchange` im aktuellen Client ist der
+                           Rückfallweg für Browser ohne WindowClient.navigate. */
+                    }
+                }));
+            })
     );
 });
 
@@ -72,11 +95,20 @@ self.addEventListener('fetch', (ereignis) => {
        zwischengespeichert werden. */
     if (adresse.origin !== self.location.origin) return;
 
-    /* Ein Seitenaufruf ohne Netz landet auf der zwischengespeicherten
-       Startseite; alles andere ist bei einer Ein-Seiten-App ein Fehler. */
+    /* Seitenaufrufe sind netzwerkzuerst. Damit sieht schon der erste normale
+       Start nach einer Veröffentlichung die neue index.html; offline bleibt
+       die vollständig gespeicherte Startseite verfügbar. */
     if (anfrage.mode === 'navigate') {
         ereignis.respondWith(
-            caches.match('index.html').then((treffer) => treffer || fetch(anfrage))
+            fetch(anfrage)
+                .then((antwort) => {
+                    if (antwort && antwort.ok) {
+                        const kopie = antwort.clone();
+                        caches.open(CACHE).then((speicher) => speicher.put('index.html', kopie));
+                    }
+                    return antwort;
+                })
+                .catch(() => caches.match('index.html'))
         );
         return;
     }

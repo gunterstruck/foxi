@@ -1,10 +1,10 @@
 # EinkaufsFuchs – Einkaufsliste für Haushalt, Familie und WG
 
-![Local First](https://img.shields.io/badge/Local--First-alles%20bleibt%20auf%20dem%20Ger%C3%A4t-3f9142)
-![Kein Konto](https://img.shields.io/badge/Kein%20Konto-kein%20Login%2C%20kein%20Backend-2f6f34)
+![Local First](https://img.shields.io/badge/Local--First-alles%20bleibt%20auf%20dem%20Ger%C3%A4t-0d9488)
+![Kein Konto](https://img.shields.io/badge/Kein%20Konto-kein%20Login%2C%20kein%20Backend-0f766e)
 ![PWA](https://img.shields.io/badge/PWA-offlinef%C3%A4hig-purple)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-0.5.0-orange)
+![Version](https://img.shields.io/badge/Version-0.6.0-orange)
 
 **Tippen statt Tippen.**
 
@@ -18,7 +18,8 @@ EinkaufsFuchs gehört zur selben Werkstatt wie
 [TourFuchs](https://github.com/gunterstruck/tourfuchs) und
 [SoundFuchs](https://github.com/gunterstruck/SoundFuchs) und benutzt deren
 Gestaltung: dieselben Radien, Schatten, Abstände und denselben
-Basis/Experte-Schalter. Nur der Leitton ist grün statt petrol.
+Basis/Experte-Schalter und exakt dieselbe Petrol-Farbpalette. Das Zeichen über
+dem Fuchskopf benennt die Aufgabe: Bei Foxi sind es drei Listenstriche.
 
 ### Zwei Namen, eine App
 
@@ -165,6 +166,13 @@ Directory `.`; genau das steht in `vercel.json` und wird von dort gelesen.
 
 Danach baut jeder Push auf `main` automatisch neu.
 
+Die installierte PWA prüft unmittelbar beim Start, bei der Rückkehr aus dem
+Hintergrund und während einer offenen Sitzung regelmäßig auf eine neue
+Fassung. Ein neuer Service Worker aktiviert sich ohne Wartestand und lädt
+bereits offene Foxi-Fenster neu; die Einkaufsdaten in IndexedDB bleiben
+davon unberührt. Seitenaufrufe sind online netzwerkzuerst und fallen offline
+auf die vollständig gespeicherte App-Schale zurück.
+
 `vercel.json` setzt außerdem die Kopfzeilen, die zum Grundsatz gehören:
 
 - **`Content-Security-Policy: default-src 'self'`** – der eigentliche Punkt.
@@ -189,13 +197,14 @@ der Adresse erreichbar. Das ist kein Leck – dieselben Dateien liegen ohnehin
 ### Prüfen
 
 ```bash
-npm install && npm test          # 55 Unit-Tests (Sortierung, Suche, Gruppierung, Export, Import, Daten)
+npm install && npm test          # 59 Unit-Tests (Logik, Daten, Import, PWA und Designsystem)
 
 npm i --no-save playwright && npx playwright install chromium
-node tools/durchlauf.mjs         # Prüfstrecke im echten Browser + Bilder
+node tools/durchlauf.mjs         # 48 Prüfungen im echten Browser + Bilder
+node tools/update-lauf.mjs       # echter Wechsel von alter auf neue PWA-Fassung
 ```
 
-Die Prüfstrecke (44 Prüfungen) fährt die Abnahmekriterien ab, die man mit
+Die Prüfstrecke (48 Prüfungen) fährt die Abnahmekriterien ab, die man mit
 Unit-Tests nicht erreicht: die Zwei-Tipp-Regel, zehn simulierte Einkäufe, den
 verlustfreien Moduswechsel, Rezepte, das Ziehen der Kategorien mit Zeiger und
 mit Tastatur, den Briefing-Export aus der echten Zwischenablage und einen
@@ -314,7 +323,7 @@ Zeile zwei des Textes. Foxi schlägt damit nichts nach und schickt nichts weg.
 
 ## Stand und was als Nächstes kommt
 
-**Gebaut (v0.5.0):** Version 1 ist inhaltlich vollständig – Basismodus,
+**Gebaut (v0.6.0):** Version 1 ist inhaltlich vollständig – Basismodus,
 lernender Katalog, Rezepte, Kategorie-Reihenfolge per Ziehen, Teilen als
 Datei mit Zusammenführung beim Import, Briefing-Export, Statistik,
 Offlinebetrieb, Installierbarkeit. Der Angebotsradar ist als ausdrücklich

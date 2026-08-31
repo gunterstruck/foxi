@@ -91,6 +91,25 @@ const kopfPasst = await seite.evaluate(() => {
     return leiste.scrollWidth <= leiste.clientWidth + 1;
 });
 pruefe(kopfPasst, 'Die Kopfzeile läuft nicht über');
+
+const familienDesign = await seite.evaluate(async () => {
+    const manifest = await fetch('manifest.webmanifest').then((antwort) => antwort.json());
+    const anmeldung = await navigator.serviceWorker.ready;
+    return {
+        leitton: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
+        theme: document.querySelector('meta[name="theme-color"]')?.getAttribute('content'),
+        icon: document.querySelector('.brand-icon')?.getAttribute('src') || '',
+        manifestTheme: manifest.theme_color,
+        updateOhneCache: anmeldung.updateViaCache
+    };
+});
+pruefe(familienDesign.leitton === '#0d9488', 'Foxi verwendet exakt den Leitton der Fuchs-Familie');
+pruefe(familienDesign.theme === '#0d9488' && familienDesign.manifestTheme === '#0d9488',
+    'Browserleiste und Manifest verwenden denselben Leitton');
+pruefe(familienDesign.icon.includes('icons/foxi.svg?v='),
+    'Im Kopf steht das gespeicherte Foxi-Zeichen statt eines fremden Emoji');
+pruefe(familienDesign.updateOhneCache === 'none',
+    'Der Browser prüft den Service Worker ohne einen alten HTTP-Zwischenspeicher');
 await seite.screenshot({ path: join(bilder, '01-liste-leer.png') });
 
 /* ── Zwei Tipps ─────────────────────────────────────────────────────────── */

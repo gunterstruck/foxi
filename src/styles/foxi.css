@@ -34,7 +34,7 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Kopfbereich – Form aus TourFuchs, nur der Leitton ist grün. */
+/* Kopfbereich – Form und Leitton aus derselben Fuchs-Familie. */
 .topbar {
     grid-row: 1;
     display: flex;
@@ -57,7 +57,13 @@
     font-weight: 700;
     font-size: 1.02rem;
 }
-.brand-icon { font-size: 1.25rem; }
+.brand-icon {
+    display: block;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border-radius: 7px;
+}
 .brand em { font-style: normal; color: var(--color-primary); font-weight: 600; }
 
 /* Der volle Name erscheint erst, wenn er neben den Tiefenschalter passt.
