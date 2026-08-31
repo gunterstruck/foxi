@@ -455,7 +455,7 @@ function fusszeile() {
     const fuss = document.createElement('p');
     fuss.className = 'fusszeile';
     fuss.append(
-        document.createTextNode(`Foxi · ${t('mehr.version', VERSION)}`),
+        document.createTextNode(`${t('app.name')} · ${t('mehr.version', VERSION)}`),
         document.createElement('br'),
         document.createTextNode(t('mehr.lizenz'))
     );

@@ -48,7 +48,7 @@ export async function teileAlsDatei() {
        keine Dateien an – der Aufruf schlüge dann erst zur Laufzeit fehl. */
     if (navigator.canShare?.({ files: [datei] })) {
         try {
-            await navigator.share({ files: [datei], title: 'Foxi' });
+            await navigator.share({ files: [datei], title: t('app.name') });
             melde(t('teilen.geteilt'));
             return;
         } catch (fehler) {

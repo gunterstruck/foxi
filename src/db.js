@@ -11,6 +11,11 @@
  * gezeigt hat.
  */
 
+/* Der Datenbankname bleibt `foxi`, obwohl die App inzwischen
+   EinkaufsFuchs heißt. Ein neuer Name wäre eine neue, leere Datenbank –
+   jede bestehende Installation verlöre Liste, Kaufhistorie und eigene
+   Artikel, ohne dass ein Mensch das je gewollt hätte. Ein Bezeichner ist
+   kein Schaufenster: Er darf alt aussehen, solange er stimmt. */
 export const DB_NAME = 'foxi';
 export const DB_VERSION = 1;
 

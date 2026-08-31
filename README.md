@@ -1,23 +1,45 @@
-# Foxi – Einkaufsliste für Haushalt, Familie und WG
+# EinkaufsFuchs – Einkaufsliste für Haushalt, Familie und WG
 
 ![Local First](https://img.shields.io/badge/Local--First-alles%20bleibt%20auf%20dem%20Ger%C3%A4t-3f9142)
 ![Kein Konto](https://img.shields.io/badge/Kein%20Konto-kein%20Login%2C%20kein%20Backend-2f6f34)
 ![PWA](https://img.shields.io/badge/PWA-offlinef%C3%A4hig-purple)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-0.3.0-orange)
+![Version](https://img.shields.io/badge/Version-0.4.0-orange)
 
 **Tippen statt Tippen.**
 
-Foxi ist eine Einkaufsliste als Progressive Web App. Artikel kommen durch
+**EinkaufsFuchs**, kurz **Foxi**, ist eine Einkaufsliste als Progressive Web App. Artikel kommen durch
 Antippen einer Kachel auf die Liste, nicht durch Schreiben. Im Laden tippt man
 sie erneut an, um sie abzuhaken. Der Katalog merkt sich dabei, was dieser
 Haushalt tatsächlich braucht, und sortiert sich danach – ohne Menüpunkt, ohne
 Einstellung, ohne Erklärung.
 
-Foxi gehört zur selben Werkstatt wie [TourFuchs](https://github.com/gunterstruck/tourfuchs)
-und [SoundFuchs](https://github.com/gunterstruck/SoundFuchs) und benutzt
-deren Gestaltung: dieselben Radien, Schatten, Abstände und denselben
+EinkaufsFuchs gehört zur selben Werkstatt wie
+[TourFuchs](https://github.com/gunterstruck/tourfuchs) und
+[SoundFuchs](https://github.com/gunterstruck/SoundFuchs) und benutzt deren
+Gestaltung: dieselben Radien, Schatten, Abstände und denselben
 Basis/Experte-Schalter. Nur der Leitton ist grün statt petrol.
+
+### Zwei Namen, eine App
+
+**EinkaufsFuchs** steht dort, wo die App sich vorstellt: Fenstertitel,
+Startbildschirm, Fußzeile, weitergegebene Texte. Er stellt sie neben ihre
+Geschwister, wo sie hingehört.
+
+**Foxi** steht dort, wo sie benutzt wird. „Hol das mal in Foxi rein" sagt
+sich leichter als das Kompositum – und in einer Kopfzeile von 360 px
+konkurriert der kurze Name nicht mit dem Tiefenschalter. Ab 420 px
+Bildschirmbreite wechselt die Kopfzeile auf den vollen Namen; der jeweils
+andere steht auf `display: none` und damit auch nicht im Barrierebaum, sodass
+Vorlesehilfen genau einen Namen zu hören bekommen.
+
+Zwei Bezeichner bleiben bewusst auf `foxi`, obwohl sie es nicht mehr müssten:
+der Name der IndexedDB-Datenbank und die Typkennung im Dateikopf der
+Austauschdatei. Ein neuer Datenbankname wäre eine neue, leere Datenbank – jede
+bestehende Installation verlöre Liste, Kaufhistorie und eigene Artikel. Und
+eine neue Typkennung ließe Foxi seine eigenen älteren Dateien als „fremd"
+abweisen. Ein Bezeichner ist kein Schaufenster: Er darf alt aussehen, solange
+er stimmt.
 
 ---
 
@@ -159,7 +181,7 @@ npm i --no-save playwright && npx playwright install chromium
 node tools/durchlauf.mjs         # Prüfstrecke im echten Browser + Bilder
 ```
 
-Die Prüfstrecke (35 Prüfungen) fährt die Abnahmekriterien ab, die man mit
+Die Prüfstrecke (39 Prüfungen) fährt die Abnahmekriterien ab, die man mit
 Unit-Tests nicht erreicht: die Zwei-Tipp-Regel, zehn simulierte Einkäufe, den
 verlustfreien Moduswechsel, Rezepte, das Ziehen der Kategorien mit Zeiger und
 mit Tastatur, den Briefing-Export aus der echten Zwischenablage und einen

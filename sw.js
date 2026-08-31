@@ -11,7 +11,7 @@
  * eine neue `CACHE`-Nummer herein.
  */
 
-const CACHE = 'foxi-v0.3.0';
+const CACHE = 'einkaufsfuchs-v0.4.0';
 
 const SCHALE = [
     './',
