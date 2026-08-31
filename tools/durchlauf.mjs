@@ -89,7 +89,11 @@ await seite.waitForSelector('.kachel');
 await seite.screenshot({ path: join(bilder, '02-katalog.png') });
 
 await seite.locator('.kachel').first().tap();                    // Tipp 2
-await seite.waitForSelector('.kachel.ist-drauf');
+/* Auf die Zahl am Reiter warten, nicht auf die grüne Kachel: Die Kachel
+   färbt sich absichtlich sofort um, noch bevor der Zustand geschrieben ist
+   (siehe `kachel()` in ui/katalog.js). Wer auf sie wartet, misst den
+   Lidschlag davor – der Zähler stand dann gemessen noch auf 0. */
+await seite.waitForSelector('#tab-liste-zahl:not([hidden])');
 const nachZweiTipps = await seite.locator('#tab-liste-zahl').textContent();
 pruefe(nachZweiTipps === '1', `Zwei Tipps genügen für den ersten Artikel (Zähler: ${nachZweiTipps})`);
 
@@ -253,17 +257,46 @@ const ersteListenGruppe = await seite.locator('#bereich-liste .gruppe-kopf').fir
 pruefe(ersteListenGruppe?.includes('Obst'),
     `Die Liste folgt der Kategorie-Reihenfolge (erste Gruppe: ${ersteListenGruppe?.trim()})`);
 
-/* ── Experte: Briefing-Export ───────────────────────────────────────────── */
+/* ── Experte: Ort ───────────────────────────────────────────────────────── */
 await seite.locator('#tab-mehr').tap();
+await seite.waitForSelector('.ort-feld');
+await seite.locator('.ort-feld').fill('45136 Essen');
+await seite.locator('.ort-feld').blur();
+await seite.waitForTimeout(250);
+await seite.locator('#tab-liste').tap();
+await seite.locator('#tab-mehr').tap();
+await seite.waitForSelector('.ort-feld');
+pruefe(await seite.locator('.ort-feld').inputValue() === '45136 Essen',
+    'Der Ort überlebt den Bereichswechsel');
+
+/* ── Experte: Briefing-Export ───────────────────────────────────────────── */
 await seite.locator('button', { hasText: 'Liste als Text kopieren' }).tap();
 await seite.waitForTimeout(300);
 const ausDerZwischenablage = await seite.evaluate(() => navigator.clipboard.readText());
-pruefe(/^Einkaufsliste \(\d{2}\.\d{2}\.\d{4}\)\n\n/.test(ausDerZwischenablage),
-    'Der Klartext beginnt mit Überschrift und Leerzeile');
+const klartextZeilen = ausDerZwischenablage.split('\n');
+pruefe(/^Einkaufsliste \(\d{2}\.\d{2}\.\d{4}\)$/.test(klartextZeilen[0]),
+    'Der Klartext beginnt mit der Überschrift');
+/* Kopf und Inhalt trennt eine Leerzeile – mit Ortszeile also die dritte. */
+pruefe(klartextZeilen[2] === '', 'Eine Leerzeile trennt Kopf und Inhalt');
 pruefe(/\n[^:\n]+: .+/.test(ausDerZwischenablage),
     'Er führt die Kategorien als „Kategorie: Artikel, Artikel"');
 /* Keine vorgefertigte Frage: Der Mensch schreibt selbst, was er wissen will. */
 pruefe(!ausDerZwischenablage.includes('?'), 'Er hängt keine Frage an');
+pruefe(ausDerZwischenablage.split('\n')[1] === 'Ort: 45136 Essen',
+    'Der hinterlegte Ort steht in der zweiten Zeile');
+
+/* ── Experte: Stammartikel ──────────────────────────────────────────────── */
+await seite.locator('button', { hasText: 'Stammartikel kopieren' }).tap();
+await seite.waitForTimeout(300);
+const stammtext = await seite.evaluate(() => navigator.clipboard.readText());
+pruefe(/^Stammartikel \(Foxi, Stand \d{2}\.\d{2}\.\d{4}\)\nOrt: 45136 Essen\n\n/.test(stammtext),
+    'Der Stammartikel-Export trägt Kopf und Ort');
+/* Nach zehn Einkäufen von Milch, Brot und Butter müssen genau die vorn
+   stehen – das ist derselbe Befund wie im Katalog, nur als Text zum
+   Weitergeben. */
+pruefe(/Milch \(10×\)/.test(stammtext) && /Butter \(10×\)/.test(stammtext),
+    `Er nennt die Stammartikel mit ihrer Kaufzahl (${stammtext.split('\n')[3]?.slice(0, 60)}…)`);
+pruefe(!stammtext.includes('?'), 'Auch er hängt keine Frage an');
 
 /* Langes Drücken auf eine Kachel: nur dieser eine Artikelname. */
 await seite.locator('#tab-katalog').tap();

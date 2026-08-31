@@ -14,10 +14,10 @@
 
 import { t } from '../texte.js';
 import {
-    alsAustauschdatei, alsKlartext, gruppiereListe, pruefeAustauschdatei,
-    vergleicheImport, datumFuerDateiname
+    alsAustauschdatei, alsKlartext, alsStammartikelText, kaufStatistik,
+    gruppiereListe, pruefeAustauschdatei, vergleicheImport, datumFuerDateiname
 } from '../logik.js';
-import { zustand, offeneEintraege, importAnwenden } from '../zustand.js';
+import { zustand, offeneEintraege, importAnwenden, alleArtikel, ort } from '../zustand.js';
 import { melde } from './schale.js';
 import { zeigeDialog, dialogZeile } from './dialog.js';
 
@@ -31,7 +31,7 @@ function kategorienNachId() {
 
 export function listeAlsText() {
     const gruppen = gruppiereListe(offeneEintraege(), zustand.artikel, zustand.kategorien);
-    return alsKlartext(gruppen);
+    return alsKlartext(gruppen, new Date(), ort());
 }
 
 export async function teileAlsDatei() {
@@ -91,6 +91,26 @@ export async function kopiereListeAlsText() {
     const eintraege = offeneEintraege();
     if (eintraege.length === 0) { melde(t('teilen.leerNichtsZuTeilen')); return; }
     await kopiere(listeAlsText(), t('teilen.kopiert'));
+}
+
+/**
+ * Die Stammartikel als Klartext.
+ *
+ * Der Gegenpol zum Listen-Export: nicht was heute fehlt, sondern was dieser
+ * Haushalt immer braucht. Damit lässt sich draußen die Frage stellen, die
+ * Foxi selbst nie beantworten wird – „ist etwas davon gerade im Angebot" –,
+ * ohne dass die App je eine Verbindung aufbaut.
+ *
+ * Zwanzig Einträge: genug, dass die Antwort etwas taugt, kurz genug, dass
+ * der Text noch in eine Nachricht passt.
+ */
+export async function kopiereStammartikel() {
+    const zeilen = kaufStatistik(alleArtikel(), 20);
+    if (zeilen.length === 0) { melde(t('teilen.stammartikelLeer')); return; }
+    await kopiere(
+        alsStammartikelText(zeilen, new Date(), ort()),
+        t('teilen.stammartikelKopiert', zeilen.length)
+    );
 }
 
 /** Langes Drücken auf eine Kachel: nur dieser eine Artikelname. */

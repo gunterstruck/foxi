@@ -13,11 +13,13 @@ import { kaufStatistik, datumDeutsch } from '../logik.js';
 import {
     zustand, alleArtikel, offeneEintraege, listeLeeren, allesZuruecksetzen,
     rezeptAnlegen, rezeptLoeschen, rezeptAufListe,
-    kategorienNeuOrdnen, kategorienZuruecksetzen
+    kategorienNeuOrdnen, kategorienZuruecksetzen, ort, ortSetzen
 } from '../zustand.js';
 import { melde, zeigeBereich } from './schale.js';
 import { zeigeDialog, dialogFeld, schliesseDialog } from './dialog.js';
-import { teileAlsDatei, kopiereListeAlsText, dateiEinlesen } from './teilen.js';
+import {
+    teileAlsDatei, kopiereListeAlsText, kopiereStammartikel, dateiEinlesen
+} from './teilen.js';
 
 let behaelter = null;
 
@@ -33,6 +35,7 @@ export function zeichneMehr() {
         rezepteKarte(),
         reihenfolgeKarte(),
         teilenKarte(),
+        ortKarte(),
         statistikKarte(),
         datenKarte(),
         fusszeile()
@@ -315,9 +318,52 @@ function teilenKarte() {
     abschnitt.append(knopfleiste(
         knopf(t('teilen.alsDatei'), teileAlsDatei, { betont: true }),
         knopf(t('teilen.alsText'), kopiereListeAlsText),
+        knopf(t('teilen.stammartikel'), kopiereStammartikel),
         knopf(t('teilen.importieren'), dateiEinlesen)
     ));
     abschnitt.append(absatz(t('teilen.langDrueckenHinweis'), 'muted small'));
+    return abschnitt;
+}
+
+/**
+ * Postleitzahl und Ort.
+ *
+ * Das einzige Feld in Foxi, das über das Gerät hinausweist – und selbst das
+ * nur, weil ein Mensch den kopierten Text weitergibt. Deshalb steht die
+ * Erklärung daneben und sagt ausdrücklich, was NICHT passiert: Foxi fragt
+ * damit nichts ab und schickt nichts weg.
+ *
+ * Gesichert wird beim Verlassen des Feldes, nicht bei jedem Tastendruck.
+ * Sonst schriebe jede Ziffer in die Datenbank, und die Karte zeichnete sich
+ * beim Tippen unter dem Finger neu.
+ */
+function ortKarte() {
+    const abschnitt = karte(t('ort.titel'), { experte: true });
+    abschnitt.append(absatz(t('ort.erklaerung'), 'muted small'));
+
+    const feld = document.createElement('input');
+    feld.type = 'text';
+    feld.className = 'ort-feld';
+    feld.value = ort();
+    feld.placeholder = t('ort.platzhalter');
+    feld.setAttribute('aria-label', t('ort.beschriftung'));
+    feld.enterKeyHint = 'done';
+    feld.autocomplete = 'postal-code';
+
+    const sichern = async () => {
+        const neu = feld.value.trim();
+        if (neu === ort()) return;
+        await ortSetzen(neu);
+        melde(t(neu ? 'ort.gemerkt' : 'ort.geloescht'));
+    };
+    feld.addEventListener('change', sichern);
+    feld.addEventListener('keydown', (ereignis) => {
+        if (ereignis.key !== 'Enter') return;
+        ereignis.preventDefault();
+        feld.blur();
+    });
+
+    abschnitt.append(feld);
     return abschnitt;
 }
 

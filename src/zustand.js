@@ -382,6 +382,25 @@ export async function kategorienNeuOrdnen(idsInReihenfolge) {
     melde('kategorien');
 }
 
+/**
+ * Postleitzahl und Ort.
+ *
+ * Das einzige Feld in Foxi, das nach draußen zeigt – und auch das nur, weil
+ * ein Mensch den kopierten Text selbst weitergibt. Die App fragt damit
+ * nichts ab, schlägt nichts nach und schickt nichts weg; der Wert liegt in
+ * IndexedDB wie alles andere.
+ */
+export function ort() {
+    return zustand.einstellungen.ort || '';
+}
+
+export async function ortSetzen(wert) {
+    const sauber = String(wert || '').trim();
+    zustand.einstellungen.ort = sauber;
+    await db.lege(db.SPEICHER.EINSTELLUNGEN, { schluessel: 'ort', wert: sauber });
+    melde('einstellungen');
+}
+
 export async function kategorienZuruecksetzen() {
     const nachUrsprung = [...zustand.kategorien].sort(
         (a, b) => (a.ursprung ?? a.position) - (b.ursprung ?? b.position)
