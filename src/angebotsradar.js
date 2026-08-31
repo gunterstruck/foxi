@@ -1,6 +1,6 @@
 /**
- * Der Angebotsradar-Pilot: ein klar abgegrenzter Versuch zwischen Foxis
- * lokalem Gedächtnis und einem frei gewählten Recherche-Agenten.
+ * Der Angebotscheck: eine klar abgegrenzte Brücke zwischen Foxis lokalem
+ * Gedächtnis und einem frei gewählten KI-Recherche-Assistenten.
  *
  * Foxi ruft selbst keine Händlerseite auf. Es erzeugt nur einen Auftrag und
  * nimmt später ein streng geprüftes Ergebnis entgegen. Das Demo-Profil trägt
@@ -125,7 +125,8 @@ export function alsAngebotsauftrag(profil = demoAngebotsprofil()) {
         '3. Ordne nur plausible Treffer zu. Eine andere Marke ist erlaubt, muss aber als „alternative“ markiert werden.',
         '4. Übernimm Preis, Packungsgröße, Grundpreis, Gültigkeit und konkrete Quelle. Nichts erfinden.',
         '5. Falls kein passendes Angebot existiert, gib eine leere Angebotsliste zurück.',
-        '6. Antworte ausschließlich mit gültigem JSON – ohne Markdown, Einleitung oder Nachsatz.',
+        '6. Erzeuge nach Möglichkeit eine Datei namens „foxi-angebote-JJJJ-MM-TT.json“ mit dem Ergebnis.',
+        '7. Falls du keine Datei erzeugen kannst, antworte ausschließlich mit dem gültigen JSON – ohne Markdown, Einleitung oder Nachsatz.',
         '',
         'Ausgabeformat:',
         JSON.stringify(beispiel, null, 2),
@@ -200,6 +201,96 @@ export function aktiveAngebote(daten, heute = new Date()) {
     return daten.angebote
         .filter((angebot) => angebot.gueltigVon <= tag && angebot.gueltigBis >= tag)
         .sort((a, b) => a.artikelName.localeCompare(b.artikelName, 'de') || a.preis - b.preis);
+}
+
+/** Identische Händlerangebote aus mehreren Filialen nicht als Wiederholung
+ * anzeigen. Markt und Quelle sind deshalb absichtlich nicht Teil des
+ * Schlüssels; sie werden gesammelt und bleiben im aufgeklappten Detail
+ * vollständig nachvollziehbar. */
+function gruppenschluessel(angebot) {
+    return [
+        angebot.artikelId,
+        angebot.haendler,
+        angebot.produkt,
+        angebot.preis,
+        angebot.waehrung,
+        angebot.menge,
+        angebot.grundpreis,
+        angebot.gueltigVon,
+        angebot.gueltigBis,
+        angebot.treffer
+    ].join('\u001f');
+}
+
+export function gruppiereAngebote(angebote) {
+    const gruppen = new Map();
+    for (const angebot of angebote || []) {
+        const schluessel = gruppenschluessel(angebot);
+        let gruppe = gruppen.get(schluessel);
+        if (!gruppe) {
+            gruppe = {
+                ...angebot,
+                maerkte: [],
+                quellen: [],
+                niedrigsterGefundenerGrundpreis: false
+            };
+            gruppen.set(schluessel, gruppe);
+        }
+        if (!gruppe.maerkte.includes(angebot.markt)) gruppe.maerkte.push(angebot.markt);
+        if (!gruppe.quellen.includes(angebot.quelle)) gruppe.quellen.push(angebot.quelle);
+    }
+
+    const ergebnis = [...gruppen.values()].sort(
+        (a, b) => a.artikelName.localeCompare(b.artikelName, 'de') || a.preis - b.preis
+    );
+    markiereNiedrigsteGrundpreise(ergebnis);
+    return ergebnis;
+}
+
+function grundpreisWert(grundpreis) {
+    if (typeof grundpreis !== 'string') return null;
+    const treffer = grundpreis.match(/(\d+(?:[.,]\d+)?)\s*€\s*\/\s*(.+)$/i);
+    if (!treffer) return null;
+    const wert = Number(treffer[1].replace(',', '.'));
+    if (!Number.isFinite(wert)) return null;
+    return { wert, einheit: treffer[2].trim().toLocaleLowerCase('de') };
+}
+
+function markiereNiedrigsteGrundpreise(gruppen) {
+    const vergleich = new Map();
+    for (const gruppe of gruppen) {
+        const grundpreis = grundpreisWert(gruppe.grundpreis);
+        if (!grundpreis) continue;
+        const schluessel = `${gruppe.artikelId}\u001f${grundpreis.einheit}`;
+        if (!vergleich.has(schluessel)) vergleich.set(schluessel, []);
+        vergleich.get(schluessel).push({ gruppe, wert: grundpreis.wert });
+    }
+    for (const kandidaten of vergleich.values()) {
+        if (kandidaten.length < 2) continue;
+        const niedrigster = Math.min(...kandidaten.map((kandidat) => kandidat.wert));
+        for (const kandidat of kandidaten) {
+            if (kandidat.wert === niedrigster) kandidat.gruppe.niedrigsterGefundenerGrundpreis = true;
+        }
+    }
+}
+
+export function angeboteFuerArtikel(daten, artikelId, heute = new Date()) {
+    return gruppiereAngebote(
+        aktiveAngebote(daten, heute).filter((angebot) => angebot.artikelId === artikelId)
+    );
+}
+
+export function angebotStatus(daten, heute = new Date()) {
+    if (!pruefeAngebotsergebnis(daten).gueltig) {
+        return { vorhanden: false, erzeugt: null, angebote: 0, artikel: 0 };
+    }
+    const gruppen = gruppiereAngebote(aktiveAngebote(daten, heute));
+    return {
+        vorhanden: true,
+        erzeugt: new Date(daten.erzeugt),
+        angebote: gruppen.length,
+        artikel: new Set(gruppen.map((angebot) => angebot.artikelId)).size
+    };
 }
 
 export function preisDeutsch(wert) {

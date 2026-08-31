@@ -1,20 +1,20 @@
 /**
  * Bildschirm 3: Mehr.
  *
- * Im Basismodus steht hier nur, was jeder verstehen muss: was Foxi mit den
- * Daten macht, und wie man die Liste wieder leer bekommt. Alles Weitere
- * trägt `experte-nur` – es ist im Basismodus nicht ausgebaut, sondern nur
- * nicht im Bild.
+ * Im Basismodus stehen hier der geführte Angebotscheck und die wenigen
+ * Grundlagen, die jeder verstehen muss. Seltene Werkzeuge tragen
+ * `experte-nur` – sie sind nicht ausgebaut, sondern nur nicht im Bild.
  */
 
 import { t } from '../texte.js';
 import { VERSION } from '../version.js';
 import { kaufStatistik, datumDeutsch } from '../logik.js';
-import { preisDeutsch } from '../angebotsradar.js';
+import { angebotStatus, gruppiereAngebote, preisDeutsch } from '../angebotsradar.js';
 import {
     zustand, alleArtikel, offeneEintraege, listeLeeren, allesZuruecksetzen,
     rezeptAnlegen, rezeptLoeschen, rezeptAufListe,
-    kategorienNeuOrdnen, kategorienZuruecksetzen, ort, ortSetzen, angebotsergebnis
+    kategorienNeuOrdnen, kategorienZuruecksetzen, ort, ortSetzen, angebotsergebnis,
+    angebotseinfuehrungErledigt
 } from '../zustand.js';
 import { melde, zeigeBereich } from './schale.js';
 import { zeigeDialog, dialogFeld, schliesseDialog } from './dialog.js';
@@ -22,7 +22,8 @@ import {
     teileAlsDatei, kopiereListeAlsText, kopiereStammartikel, dateiEinlesen
 } from './teilen.js';
 import {
-    aktuelleAngebote, demoAuftragKopieren, ergebnisEinfuegen, ergebnisdateiEinlesen
+    aktuelleAngebote, rechercheAuftragKopieren, ergebnisEinfuegen,
+    ergebnisdateiEinlesen, zeigeAngebotsEinfuehrung
 } from './angebote.js';
 
 let behaelter = null;
@@ -35,12 +36,12 @@ export function zeichneMehr() {
     if (!behaelter) return;
     behaelter.textContent = '';
     behaelter.append(
+        angebotsradarKarte(),
         ueberFoxi(),
         rezepteKarte(),
         reihenfolgeKarte(),
         teilenKarte(),
         ortKarte(),
-        angebotsradarKarte(),
         statistikKarte(),
         datenKarte(),
         fusszeile()
@@ -373,37 +374,66 @@ function ortKarte() {
 }
 
 /* ────────────────────────────────────────────────────────────────────────
-   Angebotsradar-Pilot
+   Wochenangebote mit KI
    ──────────────────────────────────────────────────────────────────────── */
 
 function angebotsradarKarte() {
-    const abschnitt = karte(t('angebote.titel'), { experte: true });
+    const abschnitt = karte(t('angebote.titel'));
     abschnitt.classList.add('angebote-karte');
     abschnitt.append(absatz(t('angebote.erklaerung'), 'muted small'));
-    abschnitt.append(absatz(t('angebote.datenschutz'), 'angebote-datenschutz'));
-    abschnitt.append(knopfleiste(
-        knopf(t('angebote.auftragKopieren'), demoAuftragKopieren, { betont: true }),
-        knopf(t('angebote.ergebnisEinfuegen'), ergebnisEinfuegen),
-        knopf(t('angebote.ergebnisdatei'), ergebnisdateiEinlesen)
-    ));
+
+    if (!angebotseinfuehrungErledigt()) {
+        abschnitt.append(absatz(t('angebote.einfuehrung'), 'angebote-einfuehrung'));
+        abschnitt.append(absatz(t('angebote.datenschutz'), 'angebote-datenschutz'));
+        abschnitt.append(knopfleiste(
+            knopf(t('angebote.gefuehrtEinrichten'), zeigeAngebotsEinfuehrung, { betont: true })
+        ));
+        return abschnitt;
+    }
 
     const daten = angebotsergebnis();
-    if (!daten) {
-        abschnitt.append(absatz(t('angebote.nochKeinErgebnis'), 'angebote-leer muted'));
+    const status = angebotStatus(daten);
+    if (status.vorhanden && status.angebote > 0) {
+        abschnitt.append(absatz(
+            t('angebote.statusAktuell', status.angebote, status.artikel, zeitpunktKurz(status.erzeugt)),
+            'angebote-status'
+        ));
+    } else {
+        abschnitt.append(absatz(
+            status.vorhanden ? t('angebote.keineAktuellen') : t('angebote.nochKeinErgebnis'),
+            'angebote-status angebote-status-leer'
+        ));
+    }
+
+    abschnitt.append(knopfleiste(
+        knopf(t('angebote.erneutPruefen'), rechercheAuftragKopieren, { betont: true }),
+        knopf(t('angebote.ergebnisEinfuegen'), ergebnisEinfuegen),
+        knopf(t('angebote.ergebnisdatei'), ergebnisdateiEinlesen),
+        knopf(t('angebote.soGehts'), zeigeAngebotsEinfuehrung)
+    ));
+
+    const angebote = gruppiereAngebote(aktuelleAngebote());
+    if (angebote.length === 0) {
         return abschnitt;
     }
 
-    const angebote = aktuelleAngebote();
-    if (angebote.length === 0) {
-        abschnitt.append(absatz(t('angebote.keineAktuellen'), 'angebote-leer muted'));
-        return abschnitt;
-    }
+    const einzelheiten = document.createElement('details');
+    einzelheiten.className = 'angebote-details';
+    const zusammenfassung = document.createElement('summary');
+    zusammenfassung.textContent = t('angebote.angeboteAnzeigen', angebote.length);
 
     const liste = document.createElement('ul');
     liste.className = 'angebotsliste';
     for (const angebot of angebote) liste.append(angebotszeile(angebot));
-    abschnitt.append(liste);
+    einzelheiten.append(zusammenfassung, liste);
+    abschnitt.append(einzelheiten);
     return abschnitt;
+}
+
+function zeitpunktKurz(datum) {
+    if (!(datum instanceof Date) || Number.isNaN(datum.getTime())) return '–';
+    const zeit = datum.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    return `${datumDeutsch(datum)}, ${zeit} Uhr`;
 }
 
 function angebotszeile(angebot) {
@@ -424,7 +454,9 @@ function angebotszeile(angebot) {
 
     const markt = document.createElement('span');
     markt.className = 'angebot-markt';
-    markt.textContent = `${angebot.haendler} · ${angebot.markt}`;
+    markt.textContent = angebot.maerkte.length > 1
+        ? `${angebot.haendler} · ${t('angebote.filialen', angebot.maerkte.length)}`
+        : `${angebot.haendler} · ${angebot.maerkte[0]}`;
 
     const details = document.createElement('span');
     details.className = 'angebot-details';
@@ -439,6 +471,12 @@ function angebotszeile(angebot) {
         marke.textContent = t('angebote.trefferAlternative');
         zeile.append(marke);
     }
+    if (angebot.niedrigsterGefundenerGrundpreis) {
+        const marke = document.createElement('span');
+        marke.className = 'angebot-niedrigster';
+        marke.textContent = t('angebote.niedrigsterGrundpreis');
+        zeile.append(marke);
+    }
     if (angebot.hinweis) {
         const hinweis = document.createElement('span');
         hinweis.className = 'angebot-hinweis';
@@ -446,8 +484,23 @@ function angebotszeile(angebot) {
         zeile.append(hinweis);
     }
 
+    if (angebot.maerkte.length > 1) {
+        const filialen = document.createElement('details');
+        filialen.className = 'angebot-filialen';
+        const titel = document.createElement('summary');
+        titel.textContent = t('angebote.filialenAnzeigen');
+        const liste = document.createElement('ul');
+        for (const marktname of angebot.maerkte) {
+            const eintrag = document.createElement('li');
+            eintrag.textContent = marktname;
+            liste.append(eintrag);
+        }
+        filialen.append(titel, liste);
+        zeile.append(filialen);
+    }
+
     const quelle = document.createElement('a');
-    quelle.href = angebot.quelle;
+    quelle.href = angebot.quellen[0];
     quelle.target = '_blank';
     quelle.rel = 'noopener noreferrer';
     quelle.textContent = t('angebote.quelle');

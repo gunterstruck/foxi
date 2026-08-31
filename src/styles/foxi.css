@@ -213,6 +213,7 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
 }
 .listenkarte:hover { background: var(--color-surface); border-color: #cfe3cf; }
 .listenkarte:active { transform: scale(0.985); }
+.listenkarte.hat-angebot { border-left: 4px solid var(--color-primary); }
 
 .listenkarte .karte-icon { font-size: 1.5rem; line-height: 1; }
 .listenkarte .karte-text { min-width: 0; }
@@ -231,6 +232,20 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+.listenkarte .karte-angebot {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 5px;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1.35;
+    white-space: normal;
 }
 
 /* Der Haken. Leer ein Ring, gesetzt eine grüne Fläche – mehr Erklärung
@@ -567,7 +582,15 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
     border-radius: var(--radius-m);
 }
 
-/* Angebotsradar-Pilot ─────────────────────────────────────────────────── */
+/* Wochenangebote mit KI ──────────────────────────────────────────────── */
+
+.angebote-einfuehrung,
+.angebote-status {
+    margin-top: 10px !important;
+    color: var(--color-text);
+    font-weight: 650;
+}
+.angebote-status-leer { color: var(--color-text-muted); font-weight: 500; }
 
 .angebote-datenschutz {
     padding: 8px 10px;
@@ -585,7 +608,7 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
     flex-direction: column;
     gap: 8px;
 }
-.angebotsliste li {
+.angebotsliste > li {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -608,7 +631,8 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
 .angebot-markt,
 .angebot-details,
 .angebot-hinweis { color: var(--color-text-muted); line-height: 1.35; }
-.angebot-alternative {
+.angebot-alternative,
+.angebot-niedrigster {
     align-self: flex-start;
     padding: 2px 7px;
     border-radius: var(--radius-pill);
@@ -617,6 +641,26 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
     font-size: 0.72rem;
     font-weight: 700;
 }
+.angebot-niedrigster {
+    background: #fef3c7;
+    color: #78350f;
+}
+.angebote-details { margin-top: 10px; }
+.angebote-details > summary,
+.angebot-filialen > summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    cursor: pointer;
+}
+.angebot-filialen ul {
+    margin: 0 0 4px;
+    padding-left: 20px;
+    color: var(--color-text-muted);
+}
+.angebot-filialen li { margin: 3px 0; }
 .angebotsliste a {
     align-self: flex-start;
     min-height: 32px;
@@ -626,6 +670,71 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
     font-weight: 700;
 }
 .angebote-eingabe { min-height: 220px; }
+.angebote-hilfe-schritt {
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-m);
+    background: var(--color-surface-2);
+}
+.angebote-hilfe-kopf {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+.angebote-hilfe-kopf h3 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 1rem;
+    text-transform: none;
+    letter-spacing: normal;
+}
+.angebote-hilfe-nummer {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 800;
+}
+.angebote-hilfe-aktionen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 9px;
+}
+.angebote-hilfe-aktion { min-height: 44px; }
+.angebote-assistenten {
+    flex: 1 0 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+.angebote-assistent {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-m);
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+.angebote-assistent > span { color: var(--color-text-muted); font-size: 0.82rem; line-height: 1.4; }
+.angebote-assistent > div { display: flex; flex-wrap: wrap; gap: 12px; }
+.angebote-assistent a {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-primary-dark);
+    font-weight: 700;
+}
+@media (max-width: 520px) {
+    .angebote-assistenten { grid-template-columns: 1fr; }
+}
 
 /* Statistik ───────────────────────────────────────────────────────────── */
 

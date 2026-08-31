@@ -1,13 +1,18 @@
-# Angebotsradar-Pilot ausprobieren
+# Wochenangebote mit KI ausprobieren
 
-Der Pilot prüft eine einzige Frage:
+Foxi kann passende Wochenangebote anzeigen, ohne selbst Händlerseiten
+aufzurufen oder im Hintergrund Daten zu versenden. Die Arbeit ist bewusst
+geteilt:
 
-> Findet ein wiederkehrender Recherche-Agent verlässlich die Angebote, die zu
-> den Gewohnheiten eines Haushalts passen?
+1. **Foxi kennt den Bedarf:** ausgewählte Artikel, Region und Märkte.
+2. **Ein KI-Recherche-Assistent sucht:** Er prüft die öffentlichen
+   Angebotsseiten nach Foxis festen Regeln.
+3. **Der Mensch gibt das Ergebnis zurück:** als Foxi-Datei oder vollständigen
+   JSON-Text.
 
-Er ist bewusst noch keine automatische Händleranbindung. EinkaufsFuchs ruft
-keine Händlerseite auf und sendet keine Daten. Der Mensch kopiert einen
-Auftrag zu einem frei gewählten Agenten und fügt dessen Ergebnis wieder ein.
+Beim ersten Öffnen erklärt Foxi diesen Ablauf in drei Schritten. Danach bleibt
+eine kompakte Alltagskarte mit Recherche, Import und einer jederzeit
+erreichbaren Hilfe.
 
 ## Was im Demo-Profil steht
 
@@ -18,47 +23,45 @@ Auftrag zu einem frei gewählten Agenten und fügt dessen Ergebnis wieder ein.
 - 15 erfundene, alltägliche Stammartikel mit groben Gewichten
 
 Die Kaufgewohnheiten sind vollständig erfunden. Eine Wohnadresse steht weder
-im Auftrag noch im Repository. Die Region und die ausgewählten Märkte reichen
-für den Angebotsabgleich aus.
+im Auftrag noch im Repository. Region und ausgewählte Märkte reichen für den
+Versuch aus.
 
-## Einmal manuell testen
+## Einmal einrichten
 
-1. EinkaufsFuchs öffnen und auf **Experte** schalten.
-2. Unter **Mehr → Angebotsradar – Versuch** auf
-   **Demo-Auftrag kopieren** tippen.
-3. Den Text in Claude Cowork oder einen anderen recherchefähigen Agenten
-   einfügen und ausführen lassen.
-4. Der Auftrag verlangt ausschließlich JSON. Den gesamten JSON-Text kopieren.
-5. In EinkaufsFuchs auf **Ergebnis einfügen** tippen, einsetzen und
-   **Angebote übernehmen** wählen.
-6. Aktuell gültige Treffer erscheinen direkt in derselben Karte.
+1. Unter **Mehr → Wochenangebote mit KI** auf **Geführt einrichten** tippen.
+2. **Rechercheauftrag kopieren** wählen.
+3. Den Auftrag in Claude Cowork, ChatGPT oder einen anderen Assistenten mit
+   Webrecherche einfügen und ausführen lassen.
+4. Die erzeugte Datei über **Ergebnisdatei auswählen** einlesen. Falls der
+   Assistent keine Datei erzeugt, sein vollständiges JSON über
+   **Aus Zwischenablage übernehmen** einfügen.
+5. Foxi prüft das Ergebnis. Gültige Treffer erscheinen in der Wochenkarte und
+   direkt an den passenden offenen Artikeln der Einkaufsliste.
 
-Alternativ kann der Agent das JSON als Datei speichern. Diese wird über
-**Ergebnisdatei einlesen** übernommen.
+Die Einführung verlinkt die offiziellen Anleitungen für geplante Aufgaben:
 
-## Als wiederkehrende Claude-Aufgabe
+- [Claude Cowork: wiederkehrende Aufgaben](https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-claude-cowork)
+- [ChatGPT: geplante Aufgaben](https://help.openai.com/en/articles/10291617/scheduled-tasks-in-chatgpt)
 
-Claude Cowork unterstützt geplante Aufgaben. Der einmal kopierte Auftrag kann
-als wöchentliche Aufgabe gespeichert werden, beispielsweise montagmorgens.
+Welche Funktionen ein Konto oder Tarif tatsächlich anbietet, entscheidet der
+jeweilige Anbieter. Foxi benötigt für den manuellen Ablauf keine Bindung an
+einen bestimmten Dienst.
 
-Der reine Web-Auftrag kann remote laufen. Soll Claude das Ergebnis dagegen in
-einen lokalen Ordner auf dem Mac schreiben, muss die Aufgabe lokal laufen und
-der Rechner mit Claude Desktop erreichbar sein. Anthropic beschreibt die
-jeweils aktuelle Funktionsweise hier:
+## Wiederkehrend recherchieren
 
-https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-claude-cowork
+Der einmal kopierte Auftrag kann im gewählten Assistenten als wöchentliche
+Aufgabe gespeichert werden, beispielsweise montagmorgens. Empfohlener Name:
+`Foxi – Wochenangebote`.
 
-Empfohlene erste Einstellung:
+Kann der Assistent eine Datei erzeugen, soll sie
+`foxi-angebote-JJJJ-MM-TT.json` heißen. Foxi überwacht keinen Ordner und liest
+nichts automatisch ein: Der Nutzer wählt die neue Datei bewusst aus. Diese
+Grenze hält den Ablauf verständlich und verhindert überraschende Zugriffe.
 
-- Name: `Foxi-Angebotsradar – Wochenangebote`
-- Rhythmus: wöchentlich, Montagmorgen
-- Freigabemodus: Änderungen und externe Aktionen bestätigen lassen
-- Auftrag: unverändert aus EinkaufsFuchs übernehmen
+## Was Foxi beim Import prüft
 
-## Warum das Ergebnis streng geprüft wird
-
-EinkaufsFuchs nimmt nur Dateien mit der Kennung `foxi-angebote`, Version 1,
-an. Jeder Treffer muss unter anderem enthalten:
+Foxi nimmt nur Ergebnisse mit der Kennung `foxi-angebote`, Version 1, an.
+Jeder Treffer muss unter anderem enthalten:
 
 - Foxi-Artikel und konkretes Händlerprodukt
 - Händler und Markt
@@ -69,20 +72,25 @@ an. Jeder Treffer muss unter anderem enthalten:
   `rewe.de`
 
 Freier Text, fremde Quellen, ungültige Preise und widersprüchliche
-Gültigkeitsdaten werden nicht übernommen. Alle sichtbaren Inhalte werden als
-Text eingesetzt; importiertes HTML wird niemals ausgeführt.
+Gültigkeitsdaten werden nicht übernommen. Importiertes HTML wird nie
+ausgeführt. Identische Angebote desselben Händlers in mehreren Filialen fasst
+Foxi zusammen; die einzelnen Märkte bleiben aufklappbar.
 
-## Was der Pilot ausdrücklich noch nicht beweist
+## Was die Preismarkierung bedeutet
 
-Ein Wochenangebot ist nicht automatisch der günstigste Gesamtpreis. Für einen
-echten Preisvergleich wären auch reguläre Preise, unterschiedliche Marken,
-Packungsgrößen sowie App- und Couponbedingungen zu berücksichtigen.
+Foxi behauptet nicht, den gesamten Markt zu kennen. Sind für denselben
+Foxi-Artikel mindestens zwei Grundpreise mit derselben Einheit vorhanden,
+markiert es den niedrigsten davon als **Niedrigster gefundener Grundpreis**.
+Kilogramm wird nicht mit Liter verglichen. Ein einzelner Fund erhält keine
+Bestpreis-Auszeichnung.
 
-Der Pilot sagt deshalb nur:
+Ein Wochenangebot ist außerdem nicht automatisch der günstigste Gesamtpreis.
+Reguläre Preise, Marken, Packungsgrößen sowie App- und Couponbedingungen
+können das Ergebnis verändern. Die belastbare Aussage lautet deshalb:
 
-> Diese für dich interessanten Artikel wurden aktuell als Angebote gefunden.
+> Unter den eingelesenen und vergleichbaren Treffern ist dies der niedrigste
+> gefundene Grundpreis.
 
-Er sagt nicht:
+Nicht:
 
-> Dieser Händler ist garantiert am günstigsten.
-
+> Dieser Händler ist garantiert überall am günstigsten.

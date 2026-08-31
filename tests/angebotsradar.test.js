@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
     aktiveAngebote,
+    angeboteFuerArtikel,
+    angebotStatus,
     alsAngebotsauftrag,
     demoAngebotsprofil,
+    gruppiereAngebote,
     preisDeutsch,
     pruefeAngebotsergebnis
 } from '../src/angebotsradar.js';
@@ -61,7 +64,8 @@ describe('Agentenauftrag', () => {
         const auftrag = alsAngebotsauftrag(
             demoAngebotsprofil(new Date('2026-08-31T07:00:00Z'))
         );
-        expect(auftrag).toContain('Antworte ausschließlich mit gültigem JSON');
+        expect(auftrag).toContain('antworte ausschließlich mit dem gültigen JSON');
+        expect(auftrag).toContain('foxi-angebote-JJJJ-MM-TT.json');
         expect(auftrag).toContain('aldi-nord.de');
         expect(auftrag).toContain('rewe.de');
         expect(auftrag).toContain('demo-45136-essen');
@@ -101,5 +105,70 @@ describe('Angebotsergebnis', () => {
 
     it('formatiert Preise deutsch', () => {
         expect(preisDeutsch(1.5)).toBe('1,50 €');
+    });
+
+    it('fasst dasselbe Angebot aus mehreren Filialen ohne Informationsverlust zusammen', () => {
+        const gruppen = gruppiereAngebote([
+            angebot(),
+            angebot({
+                markt: 'Steeler Straße 187, 45138 Essen',
+                quelle: 'https://www.aldi-nord.de/angebote.html'
+            })
+        ]);
+        expect(gruppen).toHaveLength(1);
+        expect(gruppen[0].maerkte).toEqual([
+            'Schürmannstraße 43b, 45136 Essen',
+            'Steeler Straße 187, 45138 Essen'
+        ]);
+        expect(gruppen[0].quellen).toEqual(['https://www.aldi-nord.de/angebote.html']);
+    });
+
+    it('markiert nur bei vergleichbarer Einheit den niedrigsten gefundenen Grundpreis', () => {
+        const gruppen = gruppiereAngebote([
+            angebot(),
+            angebot({
+                haendler: 'REWE',
+                markt: 'Rellinghauser Straße 239, 45136 Essen',
+                produkt: 'REWE Bio Vollmilch',
+                preis: 1.19,
+                grundpreis: '1,19 €/l',
+                quelle: 'https://www.rewe.de/angebote/nationale-angebote/'
+            }),
+            angebot({
+                produkt: 'Milchpulver',
+                preis: 2.49,
+                menge: '500 g',
+                grundpreis: '4,98 €/kg'
+            })
+        ]);
+        expect(gruppen.find((gruppe) => gruppe.grundpreis === '0,99 €/l')
+            .niedrigsterGefundenerGrundpreis).toBe(true);
+        expect(gruppen.find((gruppe) => gruppe.grundpreis === '1,19 €/l')
+            .niedrigsterGefundenerGrundpreis).toBe(false);
+        expect(gruppen.find((gruppe) => gruppe.grundpreis === '4,98 €/kg')
+            .niedrigsterGefundenerGrundpreis).toBe(false);
+    });
+
+    it('liefert für einen Listenartikel nur dessen aktive, gruppierte Treffer', () => {
+        const daten = ergebnis([
+            angebot(),
+            angebot({ markt: 'Steeler Straße 187, 45138 Essen' }),
+            angebot({ artikelId: 'butter', artikelName: 'Butter', preis: 1.49 })
+        ]);
+        const treffer = angeboteFuerArtikel(daten, 'milch', new Date('2026-09-01T12:00:00Z'));
+        expect(treffer).toHaveLength(1);
+        expect(treffer[0].maerkte).toHaveLength(2);
+    });
+
+    it('meldet gruppierte Angebote und betroffene Artikel für die Statuszeile', () => {
+        const daten = ergebnis([
+            angebot(),
+            angebot({ markt: 'Steeler Straße 187, 45138 Essen' }),
+            angebot({ artikelId: 'butter', artikelName: 'Butter', preis: 1.49 })
+        ]);
+        const status = angebotStatus(daten, new Date('2026-09-01T12:00:00Z'));
+        expect(status.vorhanden).toBe(true);
+        expect(status.angebote).toBe(2);
+        expect(status.artikel).toBe(2);
     });
 });

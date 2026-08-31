@@ -402,7 +402,7 @@ export async function ortSetzen(wert) {
 }
 
 /**
- * Letztes eingelesenes Ergebnis des optionalen Angebotsradar-Piloten.
+ * Letztes eingelesenes Ergebnis des Angebotschecks.
  *
  * Es liegt wie alle Einstellungen ausschließlich in IndexedDB. Foxi holt
  * selbst keine Angebote; der Mensch fügt die geprüfte Ergebnisdatei ein.
@@ -416,6 +416,22 @@ export async function angebotsergebnisSetzen(daten) {
     await db.lege(db.SPEICHER.EINSTELLUNGEN, {
         schluessel: 'angebotsergebnis',
         wert: daten
+    });
+    melde('angebote');
+}
+
+/** Die große Einführung ist nur bis zum ersten verstandenen Durchlauf nötig.
+ * Ein bereits eingelesenes Ergebnis gilt ebenfalls als eindeutiger Beleg,
+ * dass der Weg funktioniert hat – wichtig für Nutzer der vorherigen Fassung. */
+export function angebotseinfuehrungErledigt() {
+    return Boolean(zustand.einstellungen.angebotseinfuehrungErledigt || angebotsergebnis());
+}
+
+export async function angebotseinfuehrungAbschliessen() {
+    zustand.einstellungen.angebotseinfuehrungErledigt = true;
+    await db.lege(db.SPEICHER.EINSTELLUNGEN, {
+        schluessel: 'angebotseinfuehrungErledigt',
+        wert: true
     });
     melde('angebote');
 }

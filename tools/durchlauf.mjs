@@ -210,13 +210,47 @@ await seite.screenshot({ path: join(bilder, '06-katalog-gelernt.png') });
 
 await seite.locator('#tab-mehr').tap();
 await seite.waitForSelector('.karte');
+await seite.waitForSelector('#toast', { state: 'hidden' });
+await seite.evaluate(() => window.scrollTo(0, 0));
 await seite.screenshot({ path: join(bilder, '07-mehr.png') });
 
 /* ── Basis zeigt nichts Erklärungsbedürftiges ───────────────────────────── */
 const karteninBasis = await seite.locator('#bereich-mehr .karte:not(.experte-nur)').count();
 const karteninBasisSichtbar = await seite.locator('#bereich-mehr .karte:visible').count();
 pruefe(karteninBasisSichtbar === karteninBasis,
-    `Basis zeigt in „Mehr" nur die zwei Grundkarten (${karteninBasisSichtbar})`);
+    `Basis zeigt in „Mehr" nur die Grundkarten einschließlich Wochenangeboten (${karteninBasisSichtbar})`);
+
+/* ── Basis: einmalig geführter Angebotscheck ───────────────────────────── */
+pruefe(await seite.locator('.angebote-karte').isVisible(),
+    'Der Angebotscheck ist als Alltagsfunktion schon in Basis sichtbar');
+await seite.locator('button', { hasText: 'Geführt einrichten' }).tap();
+await seite.waitForSelector('.angebote-hilfe-schritt');
+pruefe(await seite.locator('.angebote-hilfe-schritt').count() === 3,
+    'Die Einführung erklärt den Ablauf in genau drei Schritten');
+const hilfetext = await seite.locator('.dialog-koerper').textContent();
+pruefe(hilfetext?.includes('Claude Cowork') && hilfetext.includes('ChatGPT') &&
+    hilfetext.includes('Foxi überträgt nichts automatisch'),
+    'Die Einführung nennt Assistenten und die lokale Datenschutzgrenze');
+await seite.screenshot({ path: join(bilder, '07a-angebote-einfuehrung.png') });
+await seite.locator('.dialog button', { hasText: 'Rechercheauftrag kopieren' }).tap();
+await seite.waitForTimeout(300);
+const angebotsauftrag = await seite.evaluate(() => navigator.clipboard.readText());
+pruefe(angebotsauftrag.includes('WÖCHENTLICHER FOXI-ANGEBOTSRADAR') &&
+    angebotsauftrag.includes('demo-45136-essen'),
+    'Der Rechercheauftrag trägt Regelwerk und Profil');
+pruefe(angebotsauftrag.includes('ALDI Nord') && angebotsauftrag.includes('ALDI Süd') &&
+    angebotsauftrag.includes('REWE'),
+    'Der Auftrag nennt Nord, Süd und REWE');
+const profilText = angebotsauftrag.split('Eingabeprofil:\n')[1];
+const profilImAuftrag = JSON.parse(profilText);
+pruefe(profilImAuftrag.region === '45136 Essen' &&
+    !Object.hasOwn(profilImAuftrag, 'wohnadresse') &&
+    !Object.hasOwn(profilImAuftrag, 'koordinaten'),
+    'Der Demo-Auftrag trägt nur die Region, keine Wohnadresse');
+await seite.locator('.dialog-knoepfe .primary').tap();
+await seite.waitForSelector('.angebote-karte button');
+pruefe(await seite.locator('button', { hasText: 'Erneut recherchieren' }).count() === 1,
+    'Nach der Einführung bleibt eine kompakte Alltagskarte zurück');
 
 /* ── Experte: Rezepte ───────────────────────────────────────────────────── */
 await seite.locator('#modus-schalter .seg[data-modus="experte"]').tap();
@@ -327,22 +361,7 @@ pruefe(/Milch \(10×\)/.test(stammtext) && /Butter \(10×\)/.test(stammtext),
     `Er nennt die Stammartikel mit ihrer Kaufzahl (${stammtext.split('\n')[3]?.slice(0, 60)}…)`);
 pruefe(!stammtext.includes('?'), 'Auch er hängt keine Frage an');
 
-/* ── Experte: Angebotsradar-Pilot ──────────────────────────────────────── */
-await seite.locator('button', { hasText: 'Demo-Auftrag kopieren' }).tap();
-await seite.waitForTimeout(300);
-const angebotsauftrag = await seite.evaluate(() => navigator.clipboard.readText());
-pruefe(angebotsauftrag.includes('WÖCHENTLICHER FOXI-ANGEBOTSRADAR') &&
-    angebotsauftrag.includes('demo-45136-essen'),
-    'Der Demo-Auftrag trägt Regelwerk und Profil');
-pruefe(angebotsauftrag.includes('ALDI Nord') && angebotsauftrag.includes('ALDI Süd') &&
-    angebotsauftrag.includes('REWE'),
-    'Der Auftrag nennt Nord, Süd und REWE');
-const profilText = angebotsauftrag.split('Eingabeprofil:\n')[1];
-const profilImAuftrag = JSON.parse(profilText);
-pruefe(profilImAuftrag.region === '45136 Essen' &&
-    !Object.hasOwn(profilImAuftrag, 'wohnadresse') &&
-    !Object.hasOwn(profilImAuftrag, 'koordinaten'),
-    'Der Demo-Auftrag trägt nur die Region, keine Wohnadresse');
+/* ── Angebotscheck: Ergebnis zurück zu Foxi ────────────────────────────── */
 
 const heute = new Date();
 const tag = (datum) => datum.toISOString().slice(0, 10);
@@ -372,16 +391,22 @@ const agentenergebnis = {
     }]
 };
 const angebotsPfad = join(tmpdir(), 'foxi-agentenergebnis.json');
-await seite.locator('button', { hasText: 'Ergebnis einfügen' }).tap();
+await seite.locator('button', { hasText: 'Aus Zwischenablage übernehmen' }).tap();
 await seite.waitForSelector('.angebote-eingabe');
 await seite.locator('.angebote-eingabe').fill(JSON.stringify(agentenergebnis, null, 2));
 await seite.locator('.dialog-knoepfe .primary').tap();
+await seite.waitForSelector('.angebote-details', { state: 'attached' });
+await seite.locator('.angebote-details > summary').tap();
 await seite.waitForSelector('.angebotsliste');
 const eingefuegterText = await seite.locator('.angebotsliste').textContent();
 pruefe(eingefuegterText?.includes('Milch') && eingefuegterText.includes('0,99 €'),
     'Ein kopiertes JSON-Ergebnis lässt sich direkt einfügen');
 
 const dateiErgebnis = structuredClone(agentenergebnis);
+dateiErgebnis.angebote.push({
+    ...structuredClone(agentenergebnis.angebote[0]),
+    markt: 'Steeler Straße 187, 45138 Essen'
+});
 dateiErgebnis.angebote.push({
     artikelId: 'butter',
     artikelName: 'Butter',
@@ -402,18 +427,48 @@ writeFileSync(angebotsPfad, JSON.stringify(dateiErgebnis, null, 2), 'utf8');
 
 const [angebotsDateiwaehler] = await Promise.all([
     seite.waitForEvent('filechooser'),
-    seite.locator('button', { hasText: 'Ergebnisdatei einlesen' }).tap()
+    seite.locator('button', { hasText: 'Ergebnisdatei auswählen' }).tap()
 ]);
 await angebotsDateiwaehler.setFiles(angebotsPfad);
-await seite.waitForSelector('.angebotsliste li:nth-child(2)');
+await seite.waitForSelector('.angebote-details', { state: 'attached' });
+await seite.locator('.angebote-details > summary').tap();
+await seite.waitForSelector('.angebotsliste > li:nth-child(2)');
 const angebotsText = await seite.locator('.angebotsliste').textContent();
 pruefe(angebotsText?.includes('Milch') && angebotsText.includes('0,99 €') &&
     angebotsText.includes('ALDI Nord') && angebotsText.includes('Butter') &&
     angebotsText.includes('ALDI Süd'),
-    `Ein geprüftes Agentenergebnis erscheint in Foxi (${angebotsText?.trim()})`);
+    `Ein geprüftes Rechercheergebnis erscheint in Foxi (${angebotsText?.trim()})`);
+pruefe(await seite.locator('.angebotsliste > li').count() === 2 &&
+    angebotsText.includes('2 ausgewählte Filialen'),
+    'Dasselbe Angebot aus zwei Filialen erscheint nur einmal');
 await seite.locator('.angebote-karte').scrollIntoViewIfNeeded();
-await seite.waitForTimeout(150);
+await seite.waitForSelector('#toast', { state: 'hidden' });
 await seite.screenshot({ path: join(bilder, '13-angebotsradar.png') });
+
+/* Der konkrete Mehrwert steht nicht nur unter „Mehr", sondern direkt an
+   den passenden offenen Artikeln. */
+await seite.locator('#tab-katalog').tap();
+for (const name of ['Milch', 'Butter']) {
+    await seite.locator('#katalog-suche').fill(name);
+    const treffer = seite.locator('.kachel').first();
+    if (!(await treffer.evaluate((element) => element.classList.contains('ist-drauf')))) {
+        await treffer.tap();
+    }
+}
+await seite.locator('#katalog-suche').fill('');
+await seite.locator('#tab-liste').tap();
+await seite.waitForSelector('[data-artikel-id="milch"] .karte-angebot');
+const milchAngebot = await seite.locator('[data-artikel-id="milch"] .karte-angebot').textContent();
+const butterAngebot = await seite.locator('[data-artikel-id="butter"] .karte-angebot').textContent();
+pruefe(milchAngebot?.includes('0,99 €') && milchAngebot.includes('ALDI Nord'),
+    `Die Einkaufsliste zeigt den passenden Preis direkt an (${milchAngebot})`);
+pruefe(butterAngebot?.includes('Alternative') && butterAngebot.includes('1,49 €'),
+    `Alternativen sind auf der Liste eindeutig gekennzeichnet (${butterAngebot})`);
+await seite.waitForSelector('#toast', { state: 'hidden' });
+await seite.locator('#bereich-liste [data-artikel-id="butter"]').evaluate(
+    (element) => element.scrollIntoView({ block: 'center' })
+);
+await seite.screenshot({ path: join(bilder, '14-liste-mit-angeboten.png') });
 
 /* Langes Drücken auf eine Kachel: nur dieser eine Artikelname. */
 await seite.locator('#tab-katalog').tap();

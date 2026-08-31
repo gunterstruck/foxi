@@ -172,20 +172,25 @@ const DE = {
     },
 
     angebote: {
-        titel: 'Angebotsradar – Versuch',
+        titel: 'Wochenangebote mit KI',
         erklaerung:
-            'Teste den Ablauf mit erfundenen Kaufgewohnheiten für 45136 Essen. ' +
-            'Foxi ruft nichts ab: Du gibst den Auftrag an einen Agenten und fügst sein Ergebnis selbst wieder ein.',
+            'Foxi erstellt den Rechercheauftrag. Ein KI-Assistent prüft öffentliche Angebotsseiten. ' +
+            'Du übernimmst seine Treffer anschließend wieder in Foxi.',
+        einfuehrung:
+            'Einmal geführt einrichten – danach genügen im Alltag Auftrag kopieren und Ergebnis übernehmen.',
         datenschutz:
-            'Die Wohnadresse ist nicht enthalten. Das Demo-Profil nennt nur PLZ/Ort und ausgewählte Märkte.',
-        auftragTitel: 'Foxi-Angebotsauftrag',
-        auftragKopieren: 'Demo-Auftrag kopieren',
-        auftragKopiert: 'Demo-Auftrag in der Zwischenablage',
-        ergebnisEinfuegen: 'Ergebnis einfügen',
-        ergebnisdatei: 'Ergebnisdatei einlesen',
-        ergebnisTitel: 'Agentenergebnis einfügen',
+            'Im Demo-Auftrag stehen nur 45136 Essen, ausgewählte Märkte und erfundene Kaufgewohnheiten – keine Wohnadresse.',
+        gefuehrtEinrichten: 'Geführt einrichten',
+        soGehts: 'So funktioniert’s',
+        auftragTitel: 'Foxi-Rechercheauftrag',
+        auftragKopieren: 'Rechercheauftrag kopieren',
+        auftragKopiert: 'Rechercheauftrag in der Zwischenablage',
+        erneutPruefen: 'Erneut recherchieren',
+        ergebnisEinfuegen: 'Aus Zwischenablage übernehmen',
+        ergebnisdatei: 'Ergebnisdatei auswählen',
+        ergebnisTitel: 'Ergebnis des KI-Assistenten übernehmen',
         ergebnisPlatzhalter: '{ "typ": "foxi-angebote", … }',
-        ergebnisBeschriftung: 'JSON-Ergebnis des Angebotsagenten',
+        ergebnisBeschriftung: 'Ergebnis des KI-Recherche-Assistenten',
         uebernehmen: 'Angebote übernehmen',
         ergebnisUngueltig: 'Das ist kein gültiges Foxi-Angebotsergebnis.',
         ergebnisZuGross: 'Die Ergebnisdatei ist zu groß.',
@@ -193,9 +198,38 @@ const DE = {
             n === 1 ? '1 aktuelles Angebot übernommen' : `${n} aktuelle Angebote übernommen`,
         nochKeinErgebnis: 'Noch kein Ergebnis eingelesen.',
         keineAktuellen: 'Das letzte Ergebnis enthält keine heute gültigen Treffer.',
+        statusAktuell: (angebote, artikel, datum) =>
+            `${angebote} aktuelle Angebote für ${artikel} Artikel · übernommen ${datum}`,
+        angeboteAnzeigen: (n) => n === 1 ? '1 Angebot anzeigen' : `${n} Angebote anzeigen`,
+        filialen: (n) => n === 1 ? '1 ausgewählte Filiale' : `${n} ausgewählte Filialen`,
+        filialenAnzeigen: 'Filialen anzeigen',
         trefferAlternative: 'Alternative',
+        niedrigsterGrundpreis: 'Niedrigster gefundener Grundpreis',
         gueltigBis: (datum) => `bis ${datum}`,
-        quelle: 'Quelle'
+        quelle: 'Quelle',
+        listenTreffer: (preis, haendler) => `Angebot · ${preis} · ${haendler}`,
+        listenAlternative: (preis, haendler) => `Alternative im Angebot · ${preis} · ${haendler}`,
+        listenMehrere: (n, preis) => `${n} Angebote · ab ${preis}`,
+
+        hilfeTitel: 'Wochenangebote mit KI einrichten',
+        hilfeIntro:
+            'Ein KI-Recherche-Assistent kann denselben Auftrag regelmäßig ausführen und Foxi ein Ergebnis zum Einlesen zurückgeben.',
+        hilfeDatenschutz:
+            'Erst wenn du den kopierten Auftrag in eine KI einfügst, verlassen die darin sichtbaren Angaben dein Gerät. Foxi überträgt nichts automatisch.',
+        schritt1Titel: 'Auftrag aus Foxi kopieren',
+        schritt1Text:
+            'Der Auftrag enthält Suchregeln, gewünschte Artikel, ausgewählte Märkte und das Rückgabeformat.',
+        schritt2Titel: 'KI-Recherche-Assistent wählen',
+        schritt2Text:
+            'Füge den Auftrag in einen Assistenten mit Webrecherche ein. Optional kannst du ihn dort als wöchentliche Aufgabe planen.',
+        schritt3Titel: 'Treffer zurück zu Foxi',
+        schritt3Text:
+            'Der Assistent liefert möglichst eine Foxi-Datei. Alternativ kopierst du sein vollständiges Ergebnis und fügst es hier ein.',
+        assistentOeffnen: 'Öffnen',
+        anleitungOeffnen: 'Aufgaben einrichten',
+        claudeText: 'Cowork kann wiederkehrende Webrecherchen und Dateien bearbeiten.',
+        chatgptText: 'Geplante Aufgaben können regelmäßig im Web nach Änderungen suchen.',
+        verstanden: 'Verstanden'
     },
 
     zusammenfuehren: {

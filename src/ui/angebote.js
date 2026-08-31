@@ -1,5 +1,5 @@
 /**
- * Bedienwege des Angebotsradar-Piloten.
+ * Bedienwege des Angebotschecks.
  *
  * Hinaus geht ein kopierter Text, herein kommt ausschließlich JSON, das die
  * reinen Regeln in `angebotsradar.js` angenommen haben. Diese Datei zeichnet
@@ -7,8 +7,18 @@
  * zwischen Foxi und dem frei gewählten Agenten aus.
  */
 
-import { aktiveAngebote, alsAngebotsauftrag, demoAngebotsprofil, pruefeAngebotsergebnis } from '../angebotsradar.js';
-import { angebotsergebnis, angebotsergebnisSetzen } from '../zustand.js';
+import {
+    aktiveAngebote,
+    alsAngebotsauftrag,
+    demoAngebotsprofil,
+    gruppiereAngebote,
+    pruefeAngebotsergebnis
+} from '../angebotsradar.js';
+import {
+    angebotsergebnis,
+    angebotsergebnisSetzen,
+    angebotseinfuehrungAbschliessen
+} from '../zustand.js';
 import { t } from '../texte.js';
 import { zeigeDialog } from './dialog.js';
 import { melde } from './schale.js';
@@ -20,7 +30,7 @@ export function demoAuftragAlsText() {
     return alsAngebotsauftrag(demoAngebotsprofil());
 }
 
-export async function demoAuftragKopieren() {
+export async function rechercheAuftragKopieren() {
     await kopiereText(
         demoAuftragAlsText(),
         t('angebote.auftragKopiert'),
@@ -34,7 +44,8 @@ async function ergebnisUebernehmen(daten) {
         return false;
     }
     await angebotsergebnisSetzen(daten);
-    melde(t('angebote.ergebnisUebernommen', aktiveAngebote(daten).length));
+    await angebotseinfuehrungAbschliessen();
+    melde(t('angebote.ergebnisUebernommen', gruppiereAngebote(aktiveAngebote(daten)).length));
     return true;
 }
 
@@ -89,4 +100,128 @@ export function ergebnisdateiEinlesen() {
 
 export function aktuelleAngebote() {
     return aktiveAngebote(angebotsergebnis());
+}
+
+function absatz(text, klasse = '') {
+    const element = document.createElement('p');
+    if (klasse) element.className = klasse;
+    element.textContent = text;
+    return element;
+}
+
+function aktionsknopf(text, wirkung, betont = false) {
+    const element = document.createElement('button');
+    element.type = 'button';
+    element.textContent = text;
+    element.className = `angebote-hilfe-aktion${betont ? ' primary' : ''}`;
+    element.addEventListener('click', wirkung);
+    return element;
+}
+
+function externerLink(text, href, klasse = '') {
+    const link = document.createElement('a');
+    link.textContent = text;
+    link.href = href;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.className = klasse;
+    return link;
+}
+
+function schritt(zahl, titel, erklaerung, ...aktionen) {
+    const element = document.createElement('section');
+    element.className = 'angebote-hilfe-schritt';
+
+    const kopf = document.createElement('div');
+    kopf.className = 'angebote-hilfe-kopf';
+    const nummer = document.createElement('span');
+    nummer.className = 'angebote-hilfe-nummer';
+    nummer.textContent = String(zahl);
+    const ueberschrift = document.createElement('h3');
+    ueberschrift.textContent = titel;
+    kopf.append(nummer, ueberschrift);
+
+    element.append(kopf, absatz(erklaerung, 'muted'));
+    if (aktionen.length > 0) {
+        const leiste = document.createElement('div');
+        leiste.className = 'angebote-hilfe-aktionen';
+        leiste.append(...aktionen);
+        element.append(leiste);
+    }
+    return element;
+}
+
+function assistentenAuswahl() {
+    const auswahl = document.createElement('div');
+    auswahl.className = 'angebote-assistenten';
+
+    const assistent = (name, beschreibung, oeffnen, hilfe) => {
+        const karte = document.createElement('div');
+        karte.className = 'angebote-assistent';
+        const titel = document.createElement('strong');
+        titel.textContent = name;
+        const text = document.createElement('span');
+        text.textContent = beschreibung;
+        const links = document.createElement('div');
+        links.append(
+            externerLink(t('angebote.assistentOeffnen'), oeffnen),
+            externerLink(t('angebote.anleitungOeffnen'), hilfe)
+        );
+        karte.append(titel, text, links);
+        return karte;
+    };
+
+    auswahl.append(
+        assistent(
+            'Claude Cowork',
+            t('angebote.claudeText'),
+            'https://claude.ai/',
+            'https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-claude-cowork'
+        ),
+        assistent(
+            'ChatGPT',
+            t('angebote.chatgptText'),
+            'https://chatgpt.com/',
+            'https://help.openai.com/en/articles/10291617-scheduled-tasks-in-chatgpt'
+        )
+    );
+    return auswahl;
+}
+
+/** Einmalige Schulung und später jederzeit über „So funktioniert's" erneut
+ * erreichbar. Kein Link übergibt Daten automatisch; der Nutzer kopiert den
+ * Auftrag bewusst selbst in den gewählten Assistenten. */
+export function zeigeAngebotsEinfuehrung() {
+    const assistenten = assistentenAuswahl();
+    zeigeDialog({
+        titel: t('angebote.hilfeTitel'),
+        koerper: [
+            absatz(t('angebote.hilfeIntro')),
+            absatz(t('angebote.hilfeDatenschutz'), 'angebote-datenschutz'),
+            schritt(
+                1,
+                t('angebote.schritt1Titel'),
+                t('angebote.schritt1Text'),
+                aktionsknopf(t('angebote.auftragKopieren'), rechercheAuftragKopieren, true)
+            ),
+            schritt(
+                2,
+                t('angebote.schritt2Titel'),
+                t('angebote.schritt2Text'),
+                assistenten
+            ),
+            schritt(
+                3,
+                t('angebote.schritt3Titel'),
+                t('angebote.schritt3Text'),
+                aktionsknopf(t('angebote.ergebnisEinfuegen'), ergebnisEinfuegen),
+                aktionsknopf(t('angebote.ergebnisdatei'), ergebnisdateiEinlesen)
+            )
+        ],
+        knoepfe: [{
+            text: t('angebote.verstanden'),
+            betont: true,
+            wirkung: angebotseinfuehrungAbschliessen
+        }]
+    });
 }

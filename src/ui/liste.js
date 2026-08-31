@@ -9,9 +9,10 @@
 
 import { t } from '../texte.js';
 import { gruppiereListe } from '../logik.js';
+import { angeboteFuerArtikel, preisDeutsch } from '../angebotsradar.js';
 import {
     zustand, offeneEintraege, erledigteEintraege, abhaken, zurueckholen,
-    erledigteAufraeumen, eintragAendern, istExperte
+    erledigteAufraeumen, eintragAendern, istExperte, angebotsergebnis
 } from '../zustand.js';
 import { melde, zeigeBereich } from './schale.js';
 
@@ -117,16 +118,43 @@ function zeileZeichnen(eintrag, erledigt = false) {
         text.append(zeileZusatz);
     }
 
+    /* Der Angebotscheck wird dort nützlich, wo die Kaufentscheidung fällt:
+       direkt am offenen Artikel. Dieselben Händlerangebote aus mehreren
+       Filialen sind hier bereits zusammengefasst. */
+    let angebotHinweis = '';
+    if (!erledigt) {
+        const angebote = angeboteFuerArtikel(angebotsergebnis(), eintrag.artikelId);
+        if (angebote.length > 0) {
+            const guenstigster = angebote.reduce(
+                (bisher, angebot) => angebot.preis < bisher.preis ? angebot : bisher
+            );
+            angebotHinweis = angebote.length === 1
+                ? t(
+                    guenstigster.treffer === 'alternative'
+                        ? 'angebote.listenAlternative'
+                        : 'angebote.listenTreffer',
+                    preisDeutsch(guenstigster.preis),
+                    guenstigster.haendler
+                )
+                : t('angebote.listenMehrere', angebote.length, preisDeutsch(guenstigster.preis));
+            const marke = document.createElement('span');
+            marke.className = 'karte-angebot';
+            marke.textContent = angebotHinweis;
+            text.append(marke);
+            karte.classList.add('hat-angebot');
+        }
+    }
+
     const haken = document.createElement('span');
     haken.className = 'haken';
     haken.setAttribute('aria-hidden', 'true');
     haken.textContent = '✓';
 
     karte.append(icon, text, haken);
-    karte.setAttribute(
-        'aria-label',
-        erledigt ? t('liste.stimmeErledigt', eintrag.artikel.name) : t('liste.stimmeOffen', eintrag.artikel.name)
-    );
+    const stimmtext = erledigt
+        ? t('liste.stimmeErledigt', eintrag.artikel.name)
+        : t('liste.stimmeOffen', eintrag.artikel.name);
+    karte.setAttribute('aria-label', angebotHinweis ? `${stimmtext}. ${angebotHinweis}` : stimmtext);
 
     karte.addEventListener('click', async () => {
         if (erledigt) {

@@ -4,7 +4,7 @@
 ![Kein Konto](https://img.shields.io/badge/Kein%20Konto-kein%20Login%2C%20kein%20Backend-0f766e)
 ![PWA](https://img.shields.io/badge/PWA-offlinef%C3%A4hig-purple)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-0.6.0-orange)
+![Version](https://img.shields.io/badge/Version-0.7.0-orange)
 
 **Tippen statt Tippen.**
 
@@ -100,17 +100,20 @@ Warum überhaupt vergessen? Ohne Verfall gewinnt ewig, was man einmal einen
 Monat lang täglich gekauft hat – und die Kachel steht noch oben, wenn das Kind
 längst ausgezogen ist.
 
-### Angebotsradar als klar gekennzeichneter Versuch
+### Wochenangebote mit KI – lokal gesteuert
 
-Im Expertenmodus lässt sich ein persönliches Angebotsradar erproben, ohne
-Foxis Netzwerkregel aufzuweichen. Ein erfundenes Demo-Profil für `45136 Essen`
-wird zu einem Rechercheauftrag für einen frei gewählten Agenten. Dessen
-strukturiertes Ergebnis lässt sich anschließend als Text oder Datei wieder
-einlesen und wird vor der Anzeige streng geprüft.
+Im Basismodus lässt sich ein persönlicher Angebotscheck erproben, ohne Foxis
+Netzwerkregel aufzuweichen. Eine einmalige Einführung erklärt die drei
+bewussten Schritte: Auftrag kopieren, KI-Recherche-Assistenten wählen,
+Ergebnis wieder einlesen. Ein erfundenes Demo-Profil für `45136 Essen` dient
+zum sicheren Ausprobieren.
 
 Foxi recherchiert dabei nicht selbst. Es bleibt die lokale Seite der Brücke:
 Bedarf hinaus, geprüfte Treffer herein – beides nur nach einer bewussten
-Handlung. Der vollständige Versuchsablauf steht unter
+Handlung. Treffer stehen anschließend direkt an passenden Artikeln der
+Einkaufsliste. Gleiche Angebote mehrerer Filialen werden zusammengefasst;
+Bestpreis-Hinweise gibt es nur für tatsächlich vergleichbare Grundpreise.
+Der vollständige Ablauf steht unter
 [docs/angebotsradar-pilot.md](docs/angebotsradar-pilot.md).
 
 ---
@@ -130,7 +133,7 @@ sichtbare Komplexität.
 | Teilen, Export und Import | – | ✅ |
 | Briefing-Export als Klartext | – | ✅ |
 | Stammartikel-Export | – | ✅ |
-| Angebotsradar-Pilot | – | ✅ |
+| Wochenangebote mit KI | ✅ | ✅ |
 | Ort für die Texte hinterlegen | – | ✅ |
 | Statistik | – | ✅ |
 
@@ -197,14 +200,14 @@ der Adresse erreichbar. Das ist kein Leck – dieselben Dateien liegen ohnehin
 ### Prüfen
 
 ```bash
-npm install && npm test          # 59 Unit-Tests (Logik, Daten, Import, PWA und Designsystem)
+npm install && npm test          # 63 Unit-Tests (Logik, Daten, Import, PWA und Designsystem)
 
 npm i --no-save playwright && npx playwright install chromium
-node tools/durchlauf.mjs         # 48 Prüfungen im echten Browser + Bilder
+node tools/durchlauf.mjs         # 55 Prüfungen im echten Browser + Bilder
 node tools/update-lauf.mjs       # echter Wechsel von alter auf neue PWA-Fassung
 ```
 
-Die Prüfstrecke (48 Prüfungen) fährt die Abnahmekriterien ab, die man mit
+Die Prüfstrecke (55 Prüfungen) fährt die Abnahmekriterien ab, die man mit
 Unit-Tests nicht erreicht: die Zwei-Tipp-Regel, zehn simulierte Einkäufe, den
 verlustfreien Moduswechsel, Rezepte, das Ziehen der Kategorien mit Zeiger und
 mit Tastatur, den Briefing-Export aus der echten Zwischenablage und einen
@@ -278,22 +281,23 @@ sich die lernende Sortierung – und später die Rhythmus-Erkennung.
 | Barcode-Scan | Safari/iOS unterstützt `BarcodeDetector` nicht; eine Produktdatenbank wäre ein Netzwerk-Request |
 | Kassenbon-OCR | Thermopapier ist der Worst Case für OCR; die Kaufhistorie entsteht ohnehin beim Abhaken |
 | Spracheingabe | Die Web Speech API sendet Audio an Google/Apple – bricht den Grundsatz |
-| Angebote und Preise von Händlern | Keine öffentlichen Schnittstellen; kommerzielle Anbieter kosten Geld und sind rechtlich heikel |
+| Direkte automatische Händleranbindung | Keine stabilen öffentlichen Schnittstellen; würde Foxis lokale Architektur aufweichen |
 | Konto, Login, Cloud-Sync | Widerspricht dem Grundsatz |
 
-### Warum Angebote trotzdem funktionieren – ohne sie einzubauen
+### Warum Angebote trotzdem funktionieren – ohne Händleranbindung
 
-Der Verzicht auf Händlerpreise sieht nach einer Lücke aus. Er ist keine.
+Foxi lädt selbst keine Händlerpreise. Stattdessen trennt es lokalen Bedarf und
+wechselnde Webrecherche sauber voneinander.
 
 Am 30.08.2026 hat ein KI-Agent auf Zuruf die aktuellen Lebensmittelangebote
 eines Discounters von dessen Angebotsseite gelesen: 178 Einträge aus 16
 Kategorien und drei Aktionszeiträumen, mit Aktionspreis, Grundpreis und
-Gebindegröße. Das dauerte Minuten und kostete Foxi keine einzige Zeile Code.
+Gebindegröße. Das zeigt: Ein Recherche-Assistent kann die schnell alternde
+Außenwelt prüfen, während Foxi lokal, offline und anbieterunabhängig bleibt.
 
-Genau dafür gibt es den Klartext-Export. Die Liste geht als Text hinaus, ein
-Agent besorgt die Preise, der Mensch entscheidet. Foxi bleibt dabei, was es
-ist: eine App ohne Netzverbindung, die niemanden fragt und niemandem etwas
-erzählt.
+Genau dafür gibt es jetzt den geführten Angebotscheck. Foxi erstellt einen
+strukturierten Rechercheauftrag, der Mensch übergibt ihn bewusst, und Foxi
+prüft das zurückgegebene Ergebnis streng vor dem lokalen Speichern.
 
 Und deshalb hängt an diesem Export **keine vorformulierte Frage**. Derselbe
 Textblock trägt „was ist davon gerade im Angebot", „was koche ich daraus" und
@@ -301,10 +305,9 @@ Textblock trägt „was ist davon gerade im Angebot", „was koche ich daraus" u
 Fall verengen und mit den Fähigkeiten der Modelle altern. Ein reiner
 Textblock wächst mit ihnen.
 
-Eine eingebaute Angebotsfunktion wäre in beide Richtungen der schlechtere
-Tausch: Sie bräuchte eine Netzverbindung, einen Anbieter und eine
-Rechtsprüfung – und sie wäre in dem Moment veraltet, in dem die Agenten einen
-Schritt weiter sind.
+Eine direkte Händleranbindung wäre in beide Richtungen der schlechtere Tausch:
+Sie bräuchte eine dauerhafte Netzverbindung, einen Anbieter und laufende
+Pflege – und sie wäre an dessen Schnittstellen gebunden.
 
 **Zwei Exporte, zwei Fragen.** „Liste als Text kopieren" beantwortet, was
 heute fehlt. „Stammartikel kopieren" beantwortet die interessantere Frage:
@@ -313,21 +316,20 @@ was dieser Haushalt *immer* braucht, mit der Kaufzahl dahinter
 etwas davon gerade billiger ist – und das ist die Frage, die man sich selbst
 nicht beantworten kann, weil ihre Antwort jede Woche wechselt.
 
-Dazu gibt es im Expertenmodus ein Feld für **Postleitzahl und Ort**. Es ist
-das einzige Feld in Foxi, das über das Gerät hinausweist – und auch das nur,
-weil ein Mensch den kopierten Text selbst weitergibt. Ohne Ortsangabe weiß
-das Gegenüber nicht, um welche Läden es überhaupt geht; mit ihr steht sie in
-Zeile zwei des Textes. Foxi schlägt damit nichts nach und schickt nichts weg.
+Dazu gibt es im Expertenmodus ein Feld für **Postleitzahl und Ort**. Auch diese
+Angabe verlässt das Gerät nur, wenn ein Mensch einen erzeugten Text selbst
+weitergibt. Foxi schlägt damit nichts nach und schickt nichts weg.
 
 ---
 
 ## Stand und was als Nächstes kommt
 
-**Gebaut (v0.6.0):** Version 1 ist inhaltlich vollständig – Basismodus,
+**Gebaut (v0.7.0):** Version 1 ist inhaltlich vollständig – Basismodus,
 lernender Katalog, Rezepte, Kategorie-Reihenfolge per Ziehen, Teilen als
 Datei mit Zusammenführung beim Import, Briefing-Export, Statistik,
-Offlinebetrieb, Installierbarkeit. Der Angebotsradar ist als ausdrücklich
-gekennzeichneter Pilot hinzugekommen; er ist noch keine Händleranbindung.
+Offlinebetrieb, Installierbarkeit. Der geführte Angebotscheck verbindet Foxis
+lokalen Bedarf mit einem frei gewählten KI-Recherche-Assistenten; er ist keine
+automatische Händleranbindung.
 
 **Als Nächstes:** auf echten Geräten fahren. Die Prüfstrecke läuft in
 Chromium; die Emoji stammen aber aus der Schrift des Betriebssystems, und
