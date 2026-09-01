@@ -91,6 +91,13 @@ const kopfPasst = await seite.evaluate(() => {
     return leiste.scrollWidth <= leiste.clientWidth + 1;
 });
 pruefe(kopfPasst, 'Die Kopfzeile läuft nicht über');
+const navigationPasst = await seite.evaluate(() => {
+    const leiste = document.querySelector('.tableiste')?.getBoundingClientRect();
+    const buehne = document.querySelector('#buehne')?.getBoundingClientRect();
+    return Boolean(leiste && buehne && leiste.height >= 56 &&
+        leiste.top >= buehne.bottom - 1 && leiste.bottom <= innerHeight + 1);
+});
+pruefe(navigationPasst, 'Die drei unteren Reiter bleiben vollständig im Smartphone-Fenster');
 
 const familienDesign = await seite.evaluate(async () => {
     const manifest = await fetch('manifest.webmanifest').then((antwort) => antwort.json());
@@ -277,8 +284,9 @@ pruefe(profilImAuftrag.demo === false &&
     !JSON.stringify(profilImAuftrag).includes('datenUrl'),
     'Der persönliche Auftrag enthält weder Wohnadresse noch Produktfoto');
 await seite.locator('.dialog-knoepfe .primary').tap();
-await seite.waitForSelector('.angebote-karte button');
-pruefe(await seite.locator('button:visible', { hasText: 'Erneut recherchieren' }).count() === 1,
+const erneutRecherchieren = seite.locator('.angebote-karte button', { hasText: 'Erneut recherchieren' });
+await erneutRecherchieren.waitFor({ state: 'visible' });
+pruefe(await erneutRecherchieren.count() === 1,
     'Nach der Einführung bleibt eine kompakte Alltagskarte zurück');
 
 /* ── Experte: Rezepte ───────────────────────────────────────────────────── */

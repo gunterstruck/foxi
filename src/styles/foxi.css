@@ -21,9 +21,18 @@
    ──────────────────────────────────────────────────────────────────────── */
 
 #app {
+    /* Dreistufiger Höhen-Fallback: Einige installierte Android-WebViews
+       melden `dvh`, berechnen es nach einem App-Update aber zeitweise falsch.
+       Dann darf die Navigation nicht unter die lange Liste rutschen. */
+    height: 100%;
+    height: 100vh;
     height: 100dvh;
+    min-height: 0;
     display: grid;
-    grid-template-rows: var(--topbar-height) 1fr auto;
+    grid-template-rows:
+        calc(var(--topbar-height) + env(safe-area-inset-top))
+        minmax(0, 1fr)
+        calc(var(--tableiste-height) + env(safe-area-inset-bottom));
     overflow: hidden;
     overscroll-behavior: none;
     /* Der blaue Standard-Schimmer, den mobile Browser über jedes angetippte
@@ -42,7 +51,7 @@
     gap: 10px;
     padding: 0 12px;
     padding-top: env(safe-area-inset-top);
-    height: calc(var(--topbar-height) + env(safe-area-inset-top));
+    height: 100%;
     background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
     box-shadow: var(--shadow-1);
@@ -120,6 +129,7 @@
 #buehne {
     grid-row: 2;
     position: relative;
+    min-height: 0;
     overflow: hidden;
 }
 .bereich {
@@ -882,6 +892,8 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
     border-top: 1px solid var(--color-border);
     box-shadow: 0 -1px 3px rgba(15, 23, 42, 0.06);
     z-index: 20;
+    min-height: 0;
+    overflow: hidden;
 }
 .tab {
     position: relative;

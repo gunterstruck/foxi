@@ -69,3 +69,12 @@ describe('Fuchs-Familienzeichen', () => {
         expect([...png.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
     });
 });
+
+describe('Mobile App-Schale', () => {
+    it('hat einen Höhen-Fallback und reserviert die Reiterzeile fest', () => {
+        const css = lies('src/styles/foxi.css');
+        expect(css).toMatch(/#app\s*\{[\s\S]*height:\s*100%;[\s\S]*height:\s*100vh;[\s\S]*height:\s*100dvh;/);
+        expect(css).toContain('minmax(0, 1fr)');
+        expect(css).toContain('calc(var(--tableiste-height) + env(safe-area-inset-bottom))');
+    });
+});
