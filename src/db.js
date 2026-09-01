@@ -17,14 +17,15 @@
    Artikel, ohne dass ein Mensch das je gewollt hätte. Ein Bezeichner ist
    kein Schaufenster: Er darf alt aussehen, solange er stimmt. */
 export const DB_NAME = 'foxi';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 export const SPEICHER = {
     ARTIKEL: 'artikel',
     LISTE: 'liste',
     KATEGORIEN: 'kategorien',
     REZEPTE: 'rezepte',
-    EINSTELLUNGEN: 'einstellungen'
+    EINSTELLUNGEN: 'einstellungen',
+    BILDER: 'bilder'
 };
 
 let verbindung = null;
@@ -49,6 +50,9 @@ export function oeffne() {
             }
             if (!db.objectStoreNames.contains(SPEICHER.EINSTELLUNGEN)) {
                 db.createObjectStore(SPEICHER.EINSTELLUNGEN, { keyPath: 'schluessel' });
+            }
+            if (!db.objectStoreNames.contains(SPEICHER.BILDER)) {
+                db.createObjectStore(SPEICHER.BILDER, { keyPath: 'artikelId' });
             }
         };
         anfrage.onsuccess = () => {

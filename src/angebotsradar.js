@@ -80,6 +80,34 @@ export function demoAngebotsprofil(datum = new Date()) {
     };
 }
 
+/** Baut aus den ausschließlich lokal gepflegten Märkten und Produkten das
+ * Profil für den selbst gewählten Recherche-Assistenten. Produktfotos sind
+ * bewusst nie Bestandteil dieser Übergabe. */
+export function persoenlichesAngebotsprofil({ region = '', maerkte = [], artikel = [], datum = new Date() } = {}) {
+    return {
+        typ: ANGEBOTSPROFIL_TYP,
+        version: ANGEBOTSPROFIL_VERSION,
+        profilId: 'foxi-persoenlich',
+        demo: false,
+        erzeugt: datum.toISOString(),
+        region: String(region || '').trim(),
+        hinweis: 'Das Profil wurde lokal in Foxi aus ausgewählten Märkten und Produktwünschen erstellt.',
+        maerkte: maerkte.map((markt) => ({
+            id: markt.id,
+            haendler: markt.haendler,
+            markt: markt.markt,
+            angebotsseite: markt.angebotsseite || ''
+        })),
+        artikel: artikel.slice(0, 40).map((eintrag) => ({
+            id: eintrag.id,
+            name: eintrag.name,
+            wunsch: String(eintrag.wunsch || '').trim(),
+            haeufigkeit: eintrag.haeufigkeit || 'ausgewählt',
+            gewicht: Number(eintrag.gewicht) || 1
+        }))
+    };
+}
+
 /**
  * Ein Auftrag statt freier Prosa. Der Agent bekommt seinen Eingabevertrag,
  * die erlaubten Quellen und den Ausgabevertrag in einem Block. Dadurch kann
@@ -282,14 +310,17 @@ export function angeboteFuerArtikel(daten, artikelId, heute = new Date()) {
 
 export function angebotStatus(daten, heute = new Date()) {
     if (!pruefeAngebotsergebnis(daten).gueltig) {
-        return { vorhanden: false, erzeugt: null, angebote: 0, artikel: 0 };
+        return { vorhanden: false, erzeugt: null, angebote: 0, artikel: 0, gueltigBis: null };
     }
     const gruppen = gruppiereAngebote(aktiveAngebote(daten, heute));
     return {
         vorhanden: true,
         erzeugt: new Date(daten.erzeugt),
         angebote: gruppen.length,
-        artikel: new Set(gruppen.map((angebot) => angebot.artikelId)).size
+        artikel: new Set(gruppen.map((angebot) => angebot.artikelId)).size,
+        gueltigBis: gruppen.length
+            ? new Date(`${gruppen.map((angebot) => angebot.gueltigBis).sort()[0]}T12:00:00`)
+            : null
     };
 }
 

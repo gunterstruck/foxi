@@ -5,6 +5,7 @@ import {
     angebotStatus,
     alsAngebotsauftrag,
     demoAngebotsprofil,
+    persoenlichesAngebotsprofil,
     gruppiereAngebote,
     preisDeutsch,
     pruefeAngebotsergebnis
@@ -60,6 +61,19 @@ describe('Angebotsprofil-Demo', () => {
 });
 
 describe('Agentenauftrag', () => {
+    it('baut ein persönliches Profil ohne Foto- oder Adressautomatik', () => {
+        const profil = persoenlichesAngebotsprofil({
+            region: '45136 Essen',
+            maerkte: [{ id: 'm1', haendler: 'REWE', markt: 'Filiale Bergerhausen', angebotsseite: 'https://www.rewe.de/angebote/' }],
+            artikel: [{ id: 'brot', name: 'Roggenbrot', wunsch: '500 g · geschnitten', gewicht: 4 }],
+            datum: new Date('2026-09-01T08:00:00Z')
+        });
+        expect(profil.demo).toBe(false);
+        expect(profil.maerkte[0].markt).toBe('Filiale Bergerhausen');
+        expect(profil.artikel[0].wunsch).toBe('500 g · geschnitten');
+        expect(JSON.stringify(profil)).not.toContain('foto');
+    });
+
     it('fordert offizielles, reines JSON und trägt das Profil mit', () => {
         const auftrag = alsAngebotsauftrag(
             demoAngebotsprofil(new Date('2026-08-31T07:00:00Z'))
@@ -170,5 +184,6 @@ describe('Angebotsergebnis', () => {
         expect(status.vorhanden).toBe(true);
         expect(status.angebote).toBe(2);
         expect(status.artikel).toBe(2);
+        expect(status.gueltigBis.toISOString()).toContain('2026-09-05');
     });
 });

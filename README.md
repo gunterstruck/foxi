@@ -4,7 +4,7 @@
 ![Kein Konto](https://img.shields.io/badge/Kein%20Konto-kein%20Login%2C%20kein%20Backend-0f766e)
 ![PWA](https://img.shields.io/badge/PWA-offlinef%C3%A4hig-purple)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-0.7.1-orange)
+![Version](https://img.shields.io/badge/Version-0.8.0-orange)
 
 **Tippen statt Tippen.**
 
@@ -105,13 +105,15 @@ längst ausgezogen ist.
 Im Basismodus lässt sich ein persönlicher Angebotscheck erproben, ohne Foxis
 Netzwerkregel aufzuweichen. Eine einmalige Einführung erklärt die drei
 bewussten Schritte: Auftrag kopieren, KI-Recherche-Assistenten wählen,
-Ergebnis wieder einlesen. Ein erfundenes Demo-Profil für `45136 Essen` dient
-zum sicheren Ausprobieren.
+Ergebnis wieder einlesen. Der Auftrag wird aus den aktivierten Märkten, der
+aktuellen Liste und häufig gekauften Produkten lokal zusammengestellt.
+„Meine Märkte“ bleibt ebenso wie die Liste auf dem Gerät.
 
 Foxi recherchiert dabei nicht selbst. Es bleibt die lokale Seite der Brücke:
 Bedarf hinaus, geprüfte Treffer herein – beides nur nach einer bewussten
 Handlung. Treffer stehen anschließend direkt an passenden Artikeln der
 Einkaufsliste. Gleiche Angebote mehrerer Filialen werden zusammengefasst;
+Preis, Händler, Filialzahl und Ablaufdatum bleiben direkt sichtbar.
 Bestpreis-Hinweise gibt es nur für tatsächlich vergleichbare Grundpreise.
 Der vollständige Ablauf steht unter
 [docs/angebotsradar-pilot.md](docs/angebotsradar-pilot.md).
@@ -127,7 +129,7 @@ sichtbare Komplexität.
 | | Basis (Standard) | Experte |
 |---|---|---|
 | Liste, Katalog, Abhaken | ✅ | ✅ |
-| Mengen und Notizen | – | ✅ |
+| Dauerhafter Produktwunsch und lokales Foto | – | ✅ |
 | Rezepte | – | ✅ |
 | Kategorie-Reihenfolge ziehen | – | ✅ |
 | Teilen, Export und Import | – | ✅ |
@@ -320,11 +322,16 @@ Dazu gibt es im Expertenmodus ein Feld für **Postleitzahl und Ort**. Auch diese
 Angabe verlässt das Gerät nur, wenn ein Mensch einen erzeugten Text selbst
 weitergibt. Foxi schlägt damit nichts nach und schickt nichts weg.
 
+Produktwunsch und optionales Produktfoto gehören zum Artikel, nicht nur zum
+heutigen Einkaufszettel. Beim nächsten Hinzufügen sind sie wieder da. Fotos
+werden vor dem lokalen Speichern verkleinert und weder in den KI-Auftrag noch
+in den normalen Listenexport aufgenommen.
+
 ---
 
 ## Stand und was als Nächstes kommt
 
-**Gebaut (v0.7.1):** Version 1 ist inhaltlich vollständig – Basismodus,
+**Gebaut (v0.8.0):** Version 1 ist inhaltlich vollständig – Basismodus,
 lernender Katalog, Rezepte, Kategorie-Reihenfolge per Ziehen, Teilen als
 Datei mit Zusammenführung beim Import, Briefing-Export, Statistik,
 Offlinebetrieb, Installierbarkeit. Der geführte Angebotscheck verbindet Foxis

@@ -14,7 +14,7 @@ import {
     zustand, alleArtikel, offeneEintraege, listeLeeren, allesZuruecksetzen,
     rezeptAnlegen, rezeptLoeschen, rezeptAufListe,
     kategorienNeuOrdnen, kategorienZuruecksetzen, ort, ortSetzen, angebotsergebnis,
-    angebotseinfuehrungErledigt
+    angebotseinfuehrungErledigt, maerkte, marktSpeichern, marktAktivSetzen, marktLoeschen
 } from '../zustand.js';
 import { melde, zeigeBereich } from './schale.js';
 import { zeigeDialog, dialogFeld, schliesseDialog } from './dialog.js';
@@ -27,6 +27,7 @@ import {
 } from './angebote.js';
 
 let behaelter = null;
+let maerkteOffen = false;
 
 export function mehrVerdrahten() {
     behaelter = document.getElementById('mehr-inhalt');
@@ -381,6 +382,7 @@ function angebotsradarKarte() {
     const abschnitt = karte(t('angebote.titel'));
     abschnitt.classList.add('angebote-karte');
     abschnitt.append(absatz(t('angebote.erklaerung'), 'muted small'));
+    abschnitt.append(maerkteBereich());
 
     if (!angebotseinfuehrungErledigt()) {
         abschnitt.append(absatz(t('angebote.einfuehrung'), 'angebote-einfuehrung'));
@@ -395,7 +397,7 @@ function angebotsradarKarte() {
     const status = angebotStatus(daten);
     if (status.vorhanden && status.angebote > 0) {
         abschnitt.append(absatz(
-            t('angebote.statusAktuell', status.angebote, status.artikel, zeitpunktKurz(status.erzeugt)),
+            t('angebote.statusAktuell', status.angebote, status.artikel, zeitpunktKurz(status.erzeugt), datumDeutsch(status.gueltigBis)),
             'angebote-status'
         ));
     } else {
@@ -428,6 +430,60 @@ function angebotsradarKarte() {
     einzelheiten.append(zusammenfassung, liste);
     abschnitt.append(einzelheiten);
     return abschnitt;
+}
+
+function maerkteBereich() {
+    const details = document.createElement('details');
+    details.className = 'meine-maerkte';
+    details.open = maerkteOffen;
+    details.addEventListener('toggle', () => { maerkteOffen = details.open; });
+    const summary = document.createElement('summary');
+    summary.textContent = t('angebote.meineMaerkte', maerkte().length);
+    details.append(summary);
+
+    const hinweis = absatz(t('angebote.maerkteHinweis'), 'muted small');
+    details.append(hinweis);
+    if (maerkte().length) {
+        const liste = document.createElement('ul');
+        liste.className = 'maerkte-liste';
+        for (const markt of maerkte()) {
+            const zeile = document.createElement('li');
+            const haken = document.createElement('input');
+            haken.type = 'checkbox'; haken.checked = markt.aktiv !== false;
+            haken.setAttribute('aria-label', `${markt.haendler} ${markt.markt} verwenden`);
+            haken.addEventListener('change', () => marktAktivSetzen(markt.id, haken.checked));
+            const text = document.createElement('span');
+            text.textContent = `${markt.haendler} · ${markt.markt}`;
+            const entfernen = knopf('Entfernen', () => marktLoeschen(markt.id));
+            entfernen.className = 'link-knopf';
+            zeile.append(haken, text, entfernen);
+            liste.append(zeile);
+        }
+        details.append(liste);
+    }
+    details.append(knopf(t('angebote.marktHinzufuegen'), marktDialog));
+    return details;
+}
+
+function marktDialog() {
+    const haendler = document.createElement('select');
+    haendler.setAttribute('aria-label', t('angebote.haendler'));
+    for (const name of ['ALDI Nord', 'ALDI Süd', 'REWE']) {
+        const option = document.createElement('option'); option.value = name; option.textContent = name; haendler.append(option);
+    }
+    const filiale = dialogFeld({ platzhalter: t('angebote.marktPlatzhalter'), beschriftung: t('angebote.marktBeschriftung') });
+    const sichern = async () => {
+        const defaults = { 'ALDI Nord': 'https://www.aldi-nord.de/angebote.html', 'ALDI Süd': 'https://www.aldi-sued.de/angebote', REWE: 'https://www.rewe.de/angebote/' };
+        const gespeichert = await marktSpeichern({ haendler: haendler.value, markt: filiale.value, angebotsseite: defaults[haendler.value] });
+        if (!gespeichert) { melde(t('angebote.marktFehlt')); return; }
+        schliesseDialog();
+        melde(t('angebote.marktGespeichert'));
+    };
+    zeigeDialog({
+        titel: t('angebote.marktHinzufuegen'),
+        koerper: [haendler, filiale, absatz(t('angebote.marktLokal'), 'muted small')],
+        knoepfe: [{ text: t('menge.fertig'), betont: true, wirkung: sichern }]
+    });
 }
 
 function zeitpunktKurz(datum) {

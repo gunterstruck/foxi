@@ -16,6 +16,7 @@ export const zustand = {
     artikel: new Map(),      // id → { id, name, kategorieId, icon, zaehler, letzteKaeufe[] }
     kategorien: [],          // [{ id, name, icon, position }]
     liste: new Map(),        // artikelId → { artikelId, menge, notiz, erledigt, erledigtAm }
+    bilder: new Map(),       // artikelId → lokales, komprimiertes Produktfoto
     rezepte: [],             // [{ id, name, artikelIds[] }]
     einstellungen: { modus: 'basis' },
     bereit: false
@@ -74,19 +75,43 @@ export async function starte(basisPfad = './') {
         kategorien = await db.alle(db.SPEICHER.KATEGORIEN);
     }
 
-    const [artikel, liste, rezepte, einstellungen] = await Promise.all([
+    const [artikel, liste, rezepte, einstellungen, bilder] = await Promise.all([
         db.alle(db.SPEICHER.ARTIKEL),
         db.alle(db.SPEICHER.LISTE),
         db.alle(db.SPEICHER.REZEPTE),
-        db.alle(db.SPEICHER.EINSTELLUNGEN)
+        db.alle(db.SPEICHER.EINSTELLUNGEN),
+        db.alle(db.SPEICHER.BILDER)
     ]);
 
     zustand.kategorien = kategorien.sort((a, b) => a.position - b.position);
     zustand.artikel = new Map(artikel.map((a) => [a.id, a]));
     zustand.liste = new Map(liste.map((e) => [e.artikelId, e]));
     zustand.rezepte = rezepte;
+    zustand.bilder = new Map(bilder.map((bild) => [bild.artikelId, bild]));
     for (const eintrag of einstellungen) zustand.einstellungen[eintrag.schluessel] = eintrag.wert;
     if (zustand.einstellungen.modus !== 'experte') zustand.einstellungen.modus = 'basis';
+    /* Alte Mengen/Notizen werden beim ersten Start der neuen Fassung zum
+       dauerhaften Produktwunsch. Damit geht beim Umbau kein Text verloren. */
+    const geaenderteArtikel = [];
+    const geaenderteEintraege = [];
+    for (const eintrag of zustand.liste.values()) {
+        const artikelEintrag = zustand.artikel.get(eintrag.artikelId);
+        if (!artikelEintrag) continue;
+        const alt = [eintrag.menge, eintrag.notiz].filter(Boolean).join(' · ').trim();
+        if (!artikelEintrag.standardWunsch && alt) {
+            artikelEintrag.standardWunsch = alt;
+            geaenderteArtikel.push(artikelEintrag);
+        }
+        if (eintrag.notiz) {
+            eintrag.menge = alt;
+            eintrag.notiz = '';
+            geaenderteEintraege.push(eintrag);
+        }
+    }
+    await Promise.all([
+        geaenderteArtikel.length ? db.legeViele(db.SPEICHER.ARTIKEL, geaenderteArtikel) : null,
+        geaenderteEintraege.length ? db.legeViele(db.SPEICHER.LISTE, geaenderteEintraege) : null
+    ]);
     zustand.bereit = true;
     melde('start');
 }
@@ -111,7 +136,8 @@ export function erledigteEintraege() {
 
 export async function aufListeSetzen(artikelId) {
     if (!zustand.artikel.has(artikelId)) return null;
-    const eintrag = { artikelId, menge: '', notiz: '', erledigt: false, erledigtAm: null };
+    const artikel = zustand.artikel.get(artikelId);
+    const eintrag = { artikelId, menge: artikel.standardWunsch || '', notiz: '', erledigt: false, erledigtAm: null };
     zustand.liste.set(artikelId, eintrag);
     await db.lege(db.SPEICHER.LISTE, eintrag);
     melde('liste');
@@ -236,6 +262,39 @@ export function alleArtikel() {
     return [...zustand.artikel.values()];
 }
 
+export function produktfoto(artikelId) {
+    return zustand.bilder.get(artikelId)?.datenUrl || '';
+}
+
+export async function produktfotoSetzen(artikelId, datenUrl) {
+    if (!zustand.artikel.has(artikelId)) return false;
+    if (!/^data:image\/(?:jpeg|png|webp);base64,/i.test(datenUrl) || datenUrl.length > 900000) return false;
+    const bild = { artikelId, datenUrl, aktualisiert: Date.now() };
+    zustand.bilder.set(artikelId, bild);
+    await db.lege(db.SPEICHER.BILDER, bild);
+    melde('produktfoto');
+    return true;
+}
+
+export async function produktfotoLoeschen(artikelId) {
+    zustand.bilder.delete(artikelId);
+    await db.loesche(db.SPEICHER.BILDER, artikelId);
+    melde('produktfoto');
+}
+
+export async function produktwunschSetzen(artikelId, wert) {
+    const artikel = zustand.artikel.get(artikelId);
+    if (!artikel) return;
+    artikel.standardWunsch = String(wert || '').trim().slice(0, 180);
+    const eintrag = zustand.liste.get(artikelId);
+    if (eintrag) { eintrag.menge = artikel.standardWunsch; eintrag.notiz = ''; }
+    await Promise.all([
+        db.lege(db.SPEICHER.ARTIKEL, artikel),
+        eintrag ? db.lege(db.SPEICHER.LISTE, eintrag) : null
+    ]);
+    melde('produktwunsch');
+}
+
 /* ────────────────────────────────────────────────────────────────────────
    Rezepte
 
@@ -278,7 +337,7 @@ export async function rezeptAufListe(id) {
         (artikelId) => zustand.artikel.has(artikelId) && !zustand.liste.has(artikelId)
     );
     const eintraege = neue.map((artikelId) => ({
-        artikelId, menge: '', notiz: '', erledigt: false, erledigtAm: null
+        artikelId, menge: zustand.artikel.get(artikelId)?.standardWunsch || '', notiz: '', erledigt: false, erledigtAm: null
     }));
     for (const eintrag of eintraege) zustand.liste.set(eintrag.artikelId, eintrag);
     if (eintraege.length) await db.legeViele(db.SPEICHER.LISTE, eintraege);
@@ -321,12 +380,19 @@ export async function importAnwenden(fremdeArtikel, modus = 'nurNeue') {
             neueArtikel.push(artikel);
         }
 
+        const artikel = zustand.artikel.get(fremd.id);
+        const wunsch = [fremd.menge, fremd.notiz].filter(Boolean).join(' · ').trim();
+        if (artikel && wunsch && artikel.standardWunsch !== wunsch) {
+            artikel.standardWunsch = wunsch.slice(0, 180);
+            if (!neueArtikel.includes(artikel)) neueArtikel.push(artikel);
+        }
+
         /* Ein bereits abgehakter Eintrag wird durch den Import wieder offen:
            Wenn das andere Gerät ihn schickt, fehlt er dort noch. */
         const eintrag = {
             artikelId: fremd.id,
-            menge: fremd.menge || '',
-            notiz: fremd.notiz || '',
+            menge: artikel?.standardWunsch || wunsch,
+            notiz: '',
             erledigt: false,
             erledigtAm: null
         };
@@ -401,6 +467,42 @@ export async function ortSetzen(wert) {
     melde('einstellungen');
 }
 
+export function maerkte() {
+    return Array.isArray(zustand.einstellungen.maerkte) ? zustand.einstellungen.maerkte : [];
+}
+
+export function aktiveMaerkte() {
+    return maerkte().filter((markt) => markt.aktiv !== false);
+}
+
+export async function marktSpeichern(eingabe) {
+    const haendler = String(eingabe.haendler || '').trim().slice(0, 80);
+    const markt = String(eingabe.markt || '').trim().slice(0, 200);
+    if (!haendler || !markt) return null;
+    const aktuell = [...maerkte()];
+    const id = eingabe.id || `markt-${Date.now().toString(36)}`;
+    const wert = { id, haendler, markt, angebotsseite: String(eingabe.angebotsseite || '').trim().slice(0, 500), aktiv: eingabe.aktiv !== false };
+    const index = aktuell.findIndex((eintrag) => eintrag.id === id);
+    if (index >= 0) aktuell[index] = wert; else aktuell.push(wert);
+    zustand.einstellungen.maerkte = aktuell;
+    await db.lege(db.SPEICHER.EINSTELLUNGEN, { schluessel: 'maerkte', wert: aktuell });
+    melde('maerkte');
+    return wert;
+}
+
+export async function marktAktivSetzen(id, aktiv) {
+    const markt = maerkte().find((eintrag) => eintrag.id === id);
+    if (!markt) return;
+    await marktSpeichern({ ...markt, aktiv });
+}
+
+export async function marktLoeschen(id) {
+    const wert = maerkte().filter((markt) => markt.id !== id);
+    zustand.einstellungen.maerkte = wert;
+    await db.lege(db.SPEICHER.EINSTELLUNGEN, { schluessel: 'maerkte', wert });
+    melde('maerkte');
+}
+
 /**
  * Letztes eingelesenes Ergebnis des Angebotschecks.
  *
@@ -447,6 +549,7 @@ export async function allesZuruecksetzen() {
     await db.loescheDatenbank();
     zustand.artikel.clear();
     zustand.liste.clear();
+    zustand.bilder.clear();
     zustand.kategorien = [];
     zustand.rezepte = [];
     zustand.einstellungen = { modus: 'basis' };

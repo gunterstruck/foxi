@@ -167,17 +167,25 @@ await seite.screenshot({ path: join(bilder, '04-abgehakt.png') });
 /* ── Experte ────────────────────────────────────────────────────────────── */
 await seite.locator('#modus-schalter .seg[data-modus="experte"]').tap();
 await seite.waitForSelector('.karte-stift');
-pruefe(await seite.locator('.karte-stift').first().isVisible(), 'Experte zeigt Menge und Notiz');
+pruefe(await seite.locator('.karte-stift').first().isVisible(), 'Experte zeigt den dauerhaften Produktwunsch');
 await seite.locator('.karte-stift').first().tap();
 await seite.waitForSelector('.mengen-editor');
-await seite.locator('.mengen-editor input').first().fill('2 Liter');
-await seite.locator('.mengen-editor button').tap();
+await seite.locator('.mengen-editor input[type="text"]').fill('2 Liter · die kleinen');
+const [fotowaehler] = await Promise.all([
+    seite.waitForEvent('filechooser'),
+    seite.locator('.produktfoto-aktionen button', { hasText: 'Foto hinzufügen' }).tap()
+]);
+await fotowaehler.setFiles(join(wurzel, 'icons', 'favicon-64.png'));
+await seite.waitForSelector('.mengen-editor button', { hasText: 'Foto ändern' });
+await seite.locator('.mengen-editor button.primary').tap();
 await seite.waitForSelector('.karte-zusatz');
-pruefe((await seite.locator('.karte-zusatz').first().textContent())?.includes('2 Liter'),
-    'Die Menge steht an der Zeile');
+pruefe((await seite.locator('.karte-zusatz').first().textContent())?.includes('2 Liter · die kleinen'),
+    'Der Produktwunsch steht an der Zeile');
+pruefe(await seite.locator('.karte-produktfoto').count() === 1,
+    'Das lokal komprimierte Produktfoto steht am Artikel');
 await seite.screenshot({ path: join(bilder, '05-experte.png') });
 
-/* Verlustfrei zurück: Basis blendet die Menge aus, löscht sie aber nicht. */
+/* Verlustfrei zurück: Basis blendet den Wunsch aus, löscht ihn aber nicht. */
 await seite.locator('#modus-schalter .seg[data-modus="basis"]').tap();
 await seite.waitForTimeout(150);
 pruefe(await seite.locator('.karte-zusatz').count() === 0, 'Basis blendet die Menge aus');
@@ -235,6 +243,15 @@ pruefe(karteninBasisSichtbar === karteninBasis,
 /* ── Basis: einmalig geführter Angebotscheck ───────────────────────────── */
 pruefe(await seite.locator('.angebote-karte').isVisible(),
     'Der Angebotscheck ist als Alltagsfunktion schon in Basis sichtbar');
+await seite.locator('.meine-maerkte > summary').tap();
+await seite.locator('.meine-maerkte button', { hasText: 'Markt hinzufügen' }).tap();
+await seite.waitForSelector('.dialog select');
+await seite.locator('.dialog select').selectOption('REWE');
+await seite.locator('.dialog input').fill('Rellinghauser Straße 239, Essen');
+await seite.locator('.dialog .primary').tap();
+await seite.waitForSelector('.maerkte-liste');
+pruefe((await seite.locator('.maerkte-liste').textContent())?.includes('REWE'),
+    'Ein üblicher Markt lässt sich lokal speichern und aktivieren');
 await seite.locator('button', { hasText: 'Geführt einrichten' }).tap();
 await seite.waitForSelector('.angebote-hilfe-schritt');
 pruefe(await seite.locator('.angebote-hilfe-schritt').count() === 3,
@@ -248,20 +265,20 @@ await seite.locator('.dialog button', { hasText: 'Rechercheauftrag kopieren' }).
 await seite.waitForTimeout(300);
 const angebotsauftrag = await seite.evaluate(() => navigator.clipboard.readText());
 pruefe(angebotsauftrag.includes('WÖCHENTLICHER FOXI-ANGEBOTSRADAR') &&
-    angebotsauftrag.includes('demo-45136-essen'),
+    angebotsauftrag.includes('foxi-persoenlich'),
     'Der Rechercheauftrag trägt Regelwerk und Profil');
-pruefe(angebotsauftrag.includes('ALDI Nord') && angebotsauftrag.includes('ALDI Süd') &&
-    angebotsauftrag.includes('REWE'),
-    'Der Auftrag nennt Nord, Süd und REWE');
+pruefe(angebotsauftrag.includes('REWE') && angebotsauftrag.includes('Rellinghauser Straße'),
+    'Der Auftrag nennt nur den aktivierten Markt');
 const profilText = angebotsauftrag.split('Eingabeprofil:\n')[1];
 const profilImAuftrag = JSON.parse(profilText);
-pruefe(profilImAuftrag.region === '45136 Essen' &&
+pruefe(profilImAuftrag.demo === false &&
     !Object.hasOwn(profilImAuftrag, 'wohnadresse') &&
-    !Object.hasOwn(profilImAuftrag, 'koordinaten'),
-    'Der Demo-Auftrag trägt nur die Region, keine Wohnadresse');
+    !Object.hasOwn(profilImAuftrag, 'koordinaten') &&
+    !JSON.stringify(profilImAuftrag).includes('datenUrl'),
+    'Der persönliche Auftrag enthält weder Wohnadresse noch Produktfoto');
 await seite.locator('.dialog-knoepfe .primary').tap();
 await seite.waitForSelector('.angebote-karte button');
-pruefe(await seite.locator('button', { hasText: 'Erneut recherchieren' }).count() === 1,
+pruefe(await seite.locator('button:visible', { hasText: 'Erneut recherchieren' }).count() === 1,
     'Nach der Einführung bleibt eine kompakte Alltagskarte zurück');
 
 /* ── Experte: Rezepte ───────────────────────────────────────────────────── */

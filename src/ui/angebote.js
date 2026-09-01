@@ -11,11 +11,12 @@ import {
     aktiveAngebote,
     alsAngebotsauftrag,
     demoAngebotsprofil,
+    persoenlichesAngebotsprofil,
     gruppiereAngebote,
     pruefeAngebotsergebnis
 } from '../angebotsradar.js';
 import {
-    angebotsergebnis,
+    angebotsergebnis, zustand, offeneEintraege, alleArtikel, aktiveMaerkte, ort,
     angebotsergebnisSetzen,
     angebotseinfuehrungAbschliessen
 } from '../zustand.js';
@@ -30,12 +31,36 @@ export function demoAuftragAlsText() {
     return alsAngebotsauftrag(demoAngebotsprofil());
 }
 
+export function persoenlicherAuftragAlsText() {
+    const offen = offeneEintraege();
+    const ids = new Set();
+    const artikel = [];
+    for (const eintrag of offen) {
+        const stamm = zustand.artikel.get(eintrag.artikelId);
+        if (!stamm) continue;
+        ids.add(stamm.id);
+        artikel.push({ id: stamm.id, name: stamm.name, wunsch: stamm.standardWunsch || eintrag.menge || '', gewicht: 100, haeufigkeit: 'aktuell auf der Liste' });
+    }
+    const oft = alleArtikel()
+        .filter((stamm) => !ids.has(stamm.id) && (stamm.zaehler > 0 || stamm.standardWunsch))
+        .sort((a, b) => (b.zaehler || 0) - (a.zaehler || 0));
+    for (const stamm of oft.slice(0, Math.max(0, 30 - artikel.length))) {
+        artikel.push({ id: stamm.id, name: stamm.name, wunsch: stamm.standardWunsch || '', gewicht: stamm.zaehler || 1, haeufigkeit: 'häufig gekauft' });
+    }
+    return alsAngebotsauftrag(persoenlichesAngebotsprofil({ region: ort(), maerkte: aktiveMaerkte(), artikel }));
+}
+
 export async function rechercheAuftragKopieren() {
+    if (aktiveMaerkte().length === 0) {
+        melde(t('angebote.keineMaerkte'));
+        return false;
+    }
     await kopiereText(
-        demoAuftragAlsText(),
+        persoenlicherAuftragAlsText(),
         t('angebote.auftragKopiert'),
         t('angebote.auftragTitel')
     );
+    return true;
 }
 
 async function ergebnisUebernehmen(daten) {

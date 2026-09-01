@@ -8,11 +8,12 @@
  */
 
 import { t } from '../texte.js';
-import { gruppiereListe } from '../logik.js';
+import { gruppiereListe, datumDeutsch } from '../logik.js';
 import { angeboteFuerArtikel, preisDeutsch } from '../angebotsradar.js';
 import {
     zustand, offeneEintraege, erledigteEintraege, abhaken, zurueckholen,
-    erledigteAufraeumen, eintragAendern, istExperte, angebotsergebnis
+    erledigteAufraeumen, istExperte, angebotsergebnis, produktfoto,
+    produktfotoSetzen, produktfotoLoeschen, produktwunschSetzen
 } from '../zustand.js';
 import { melde, zeigeBereich } from './schale.js';
 
@@ -96,10 +97,11 @@ function zeileZeichnen(eintrag, erledigt = false) {
     karte.className = 'listenkarte' + (erledigt ? ' ist-erledigt' : '');
     karte.dataset.artikelId = eintrag.artikelId;
 
-    const icon = document.createElement('span');
-    icon.className = 'karte-icon';
+    const foto = produktfoto(eintrag.artikelId);
+    const icon = foto ? document.createElement('img') : document.createElement('span');
+    icon.className = foto ? 'karte-produktfoto' : 'karte-icon';
     icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = eintrag.artikel.icon || '🛒';
+    if (foto) icon.src = foto; else icon.textContent = eintrag.artikel.icon || '🛒';
 
     const text = document.createElement('span');
     text.className = 'karte-text';
@@ -108,9 +110,9 @@ function zeileZeichnen(eintrag, erledigt = false) {
     name.textContent = eintrag.artikel.name;
     text.append(name);
 
-    /* Menge und Notiz stehen nur im Expertenmodus im Bild. In der Datenbank
-       stehen sie immer – wer zurück auf Basis schaltet, verliert nichts. */
-    const zusatz = [eintrag.menge, eintrag.notiz].filter(Boolean).join(' · ');
+    /* Produktwunsch und Foto stehen nur im Expertenmodus im Bild. In der
+       Datenbank bleiben sie – wer zurück auf Basis schaltet, verliert nichts. */
+    const zusatz = eintrag.artikel.standardWunsch || [eintrag.menge, eintrag.notiz].filter(Boolean).join(' · ');
     if (zusatz && istExperte()) {
         const zeileZusatz = document.createElement('span');
         zeileZusatz.className = 'karte-zusatz';
@@ -134,9 +136,11 @@ function zeileZeichnen(eintrag, erledigt = false) {
                         ? 'angebote.listenAlternative'
                         : 'angebote.listenTreffer',
                     preisDeutsch(guenstigster.preis),
-                    guenstigster.haendler
+                    guenstigster.haendler,
+                    datumDeutsch(new Date(`${guenstigster.gueltigBis}T12:00:00`)),
+                    guenstigster.maerkte.length
                 )
-                : t('angebote.listenMehrere', angebote.length, preisDeutsch(guenstigster.preis));
+                : t('angebote.listenMehrere', angebote.length, preisDeutsch(guenstigster.preis), datumDeutsch(new Date(`${angebote.map((a) => a.gueltigBis).sort()[0]}T12:00:00`)));
             const marke = document.createElement('span');
             marke.className = 'karte-angebot';
             marke.textContent = angebotHinweis;
@@ -176,7 +180,7 @@ function zeileZeichnen(eintrag, erledigt = false) {
 }
 
 /**
- * Menge und Notiz (Experte).
+ * Produktwunsch und Foto (Experte).
  *
  * Kein Dialog, keine zweite Ebene: ein Stift neben der Zeile, und das Feld
  * klappt darunter auf. Ein Dialog für zwei Textfelder wäre mehr Apparat als
@@ -186,7 +190,7 @@ function mengenTeil(eintrag) {
     const stift = document.createElement('button');
     stift.type = 'button';
     stift.className = 'experte-nur karte-stift';
-    stift.textContent = eintrag.menge || eintrag.notiz ? '✏️' : '＋';
+    stift.textContent = eintrag.artikel.standardWunsch || produktfoto(eintrag.artikelId) ? '✏️' : '＋';
     stift.setAttribute('aria-label', t('liste.stimmeMenge', eintrag.artikel.name));
     stift.addEventListener('click', () => {
         offenerEditor = offenerEditor === eintrag.artikelId ? null : eintrag.artikelId;
@@ -202,19 +206,45 @@ function editor(eintrag) {
     const form = document.createElement('form');
     form.className = 'experte-nur mengen-editor';
 
-    const menge = document.createElement('input');
-    menge.type = 'text';
-    menge.value = eintrag.menge || '';
-    menge.placeholder = t('menge.platzhalter');
-    menge.setAttribute('aria-label', t('menge.beschriftung'));
-    menge.enterKeyHint = 'done';
+    const wunsch = document.createElement('input');
+    wunsch.type = 'text';
+    wunsch.maxLength = 180;
+    wunsch.value = eintrag.artikel.standardWunsch || [eintrag.menge, eintrag.notiz].filter(Boolean).join(' · ');
+    wunsch.placeholder = t('menge.wunschPlatzhalter');
+    wunsch.setAttribute('aria-label', t('menge.wunschBeschriftung'));
+    wunsch.enterKeyHint = 'done';
 
-    const notiz = document.createElement('input');
-    notiz.type = 'text';
-    notiz.value = eintrag.notiz || '';
-    notiz.placeholder = t('menge.notizPlatzhalter');
-    notiz.setAttribute('aria-label', t('menge.notizBeschriftung'));
-    notiz.enterKeyHint = 'done';
+    const fotoAktionen = document.createElement('div');
+    fotoAktionen.className = 'produktfoto-aktionen';
+    const fotoWahl = document.createElement('input');
+    fotoWahl.type = 'file'; fotoWahl.accept = 'image/*'; fotoWahl.hidden = true;
+    fotoWahl.setAttribute('capture', 'environment');
+    const fotoKnopf = document.createElement('button');
+    fotoKnopf.type = 'button';
+    fotoKnopf.textContent = produktfoto(eintrag.artikelId) ? t('menge.fotoAendern') : t('menge.fotoHinzufuegen');
+    fotoKnopf.addEventListener('click', () => fotoWahl.click());
+    fotoWahl.addEventListener('change', async () => {
+        const datei = fotoWahl.files?.[0];
+        if (!datei) return;
+        try {
+            /* Das Foto löst nach dem Speichern ein Neuzeichnen aus. Den bis
+               dahin getippten Wunsch vorher sichern, sonst wäre genau dieser
+               Text nach der Kamera-Rückkehr verschwunden. */
+            await produktwunschSetzen(eintrag.artikelId, wunsch.value);
+            const datenUrl = await bildKomprimieren(datei);
+            if (!await produktfotoSetzen(eintrag.artikelId, datenUrl)) throw new Error('zu gross');
+        } catch (fehler) {
+            console.warn('Produktfoto konnte nicht verarbeitet werden', fehler);
+            melde(t('menge.fotoFehler'));
+        }
+    });
+    fotoAktionen.append(fotoKnopf, fotoWahl);
+    if (produktfoto(eintrag.artikelId)) {
+        const loeschen = document.createElement('button');
+        loeschen.type = 'button'; loeschen.textContent = t('menge.fotoLoeschen');
+        loeschen.addEventListener('click', () => produktfotoLoeschen(eintrag.artikelId));
+        fotoAktionen.append(loeschen);
+    }
 
     const fertig = document.createElement('button');
     fertig.type = 'submit';
@@ -224,13 +254,33 @@ function editor(eintrag) {
     form.addEventListener('submit', async (ereignis) => {
         ereignis.preventDefault();
         offenerEditor = null;
-        await eintragAendern(eintrag.artikelId, { menge: menge.value, notiz: notiz.value });
+        await produktwunschSetzen(eintrag.artikelId, wunsch.value);
     });
 
-    form.append(menge, notiz, fertig);
+    form.append(wunsch, fotoAktionen, fertig);
     /* Direkt tippen können, ohne ein zweites Mal zu zielen. */
-    setTimeout(() => menge.focus(), 0);
+    setTimeout(() => wunsch.focus(), 0);
     return form;
+}
+
+function bildKomprimieren(datei) {
+    if (!datei.type.startsWith('image/') || datei.size > 12 * 1024 * 1024) return Promise.reject(new Error('bild'));
+    return new Promise((resolve, reject) => {
+        const bild = new Image();
+        bild.onload = () => {
+            const faktor = Math.min(1, 720 / Math.max(bild.width, bild.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(bild.width * faktor));
+            canvas.height = Math.max(1, Math.round(bild.height * faktor));
+            canvas.getContext('2d').drawImage(bild, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.78));
+        };
+        bild.onerror = reject;
+        const leser = new FileReader();
+        leser.onload = () => { bild.src = leser.result; };
+        leser.onerror = reject;
+        leser.readAsDataURL(datei);
+    });
 }
 
 function erledigtBlock(erledigt) {

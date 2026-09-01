@@ -42,7 +42,7 @@ const DE = {
         /* Der Satz nennt nur, was es schon gibt. Rezepte, Teilen und Statistik
            kommen dazu, sobald sie gebaut sind – bis dahin verspricht der
            Schalter sie nicht. */
-        gewechseltZuExperte: 'Experte. Mengen und Notizen sind jetzt da.'
+        gewechseltZuExperte: 'Experte. Produktwünsche und Fotos sind jetzt da.'
     },
 
     bereiche: {
@@ -69,7 +69,7 @@ const DE = {
            davon ab, ob der Artikel schon abgehakt ist. */
         stimmeOffen: (name) => `${name} – antippen zum Abhaken`,
         stimmeErledigt: (name) => `${name} – erledigt, antippen zum Zurückholen`,
-        stimmeMenge: (name) => `Menge und Notiz für ${name}`
+        stimmeMenge: (name) => `Produktwunsch und Foto für ${name}`
     },
 
     katalog: {
@@ -179,7 +179,7 @@ const DE = {
         einfuehrung:
             'Einmal geführt einrichten – danach genügen im Alltag Auftrag kopieren und Ergebnis übernehmen.',
         datenschutz:
-            'Im Demo-Auftrag stehen nur 45136 Essen, ausgewählte Märkte und erfundene Kaufgewohnheiten – keine Wohnadresse.',
+            'Im Auftrag stehen nur dein gespeicherter Ort, aktivierte Märkte und passende Produktwünsche – kein Foto und keine Wohnadresse.',
         gefuehrtEinrichten: 'Geführt einrichten',
         soGehts: 'So funktioniert’s',
         auftragTitel: 'Foxi-Rechercheauftrag',
@@ -198,8 +198,17 @@ const DE = {
             n === 1 ? '1 aktuelles Angebot übernommen' : `${n} aktuelle Angebote übernommen`,
         nochKeinErgebnis: 'Noch kein Ergebnis eingelesen.',
         keineAktuellen: 'Das letzte Ergebnis enthält keine heute gültigen Treffer.',
-        statusAktuell: (angebote, artikel, datum) =>
-            `${angebote} aktuelle Angebote für ${artikel} Artikel · übernommen ${datum}`,
+        statusAktuell: (angebote, artikel, datum, bis) =>
+            `${angebote} aktuelle Angebote für ${artikel} Artikel · gültig bis ${bis} · übernommen ${datum}`,
+        meineMaerkte: (n) => `Meine Märkte (${n})`,
+        maerkteHinweis: 'Nur aktivierte Märkte und ihr Ort werden in den kopierten Rechercheauftrag aufgenommen.',
+        marktHinzufuegen: 'Markt hinzufügen',
+        haendler: 'Händler',
+        marktBeschriftung: 'Filiale oder Adresse',
+        marktPlatzhalter: 'z. B. Steeler Straße 187, Essen',
+        marktLokal: 'Die Auswahl bleibt in Foxi auf diesem Gerät. Erst du selbst übergibst sie mit dem kopierten Auftrag an eine KI.',
+        marktFehlt: 'Bitte gib die Filiale oder Adresse an.',
+        marktGespeichert: 'Markt lokal gespeichert.',
         angeboteAnzeigen: (n) => n === 1 ? '1 Angebot anzeigen' : `${n} Angebote anzeigen`,
         filialen: (n) => n === 1 ? '1 ausgewählte Filiale' : `${n} ausgewählte Filialen`,
         filialenAnzeigen: 'Filialen anzeigen',
@@ -207,9 +216,10 @@ const DE = {
         niedrigsterGrundpreis: 'Niedrigster gefundener Grundpreis',
         gueltigBis: (datum) => `bis ${datum}`,
         quelle: 'Quelle',
-        listenTreffer: (preis, haendler) => `Angebot · ${preis} · ${haendler}`,
-        listenAlternative: (preis, haendler) => `Alternative im Angebot · ${preis} · ${haendler}`,
-        listenMehrere: (n, preis) => `${n} Angebote · ab ${preis}`,
+        listenTreffer: (preis, haendler, bis, filialen) => `Angebot · ${preis} · ${haendler}${filialen > 1 ? ` · ${filialen} Filialen` : ''} · bis ${bis}`,
+        listenAlternative: (preis, haendler, bis, filialen) => `Alternative · ${preis} · ${haendler}${filialen > 1 ? ` · ${filialen} Filialen` : ''} · bis ${bis}`,
+        listenMehrere: (n, preis, bis) => `${n} Angebote · ab ${preis} · bis ${bis}`,
+        keineMaerkte: 'Lege zuerst mindestens einen Markt unter „Meine Märkte“ an.',
 
         hilfeTitel: 'Wochenangebote mit KI einrichten',
         hilfeIntro:
@@ -259,6 +269,12 @@ const DE = {
         platzhalter: 'z. B. 1 kg',
         notizBeschriftung: 'Notiz',
         notizPlatzhalter: 'z. B. die kleinen',
+        wunschBeschriftung: 'Was genau möchtest du kaufen?',
+        wunschPlatzhalter: 'z. B. 1 kg · die kleinen',
+        fotoHinzufuegen: 'Foto hinzufügen',
+        fotoAendern: 'Foto ändern',
+        fotoLoeschen: 'Foto entfernen',
+        fotoFehler: 'Das Foto konnte nicht lokal gespeichert werden.',
         fertig: 'Fertig'
     },
 

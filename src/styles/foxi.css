@@ -216,6 +216,13 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
 .listenkarte.hat-angebot { border-left: 4px solid var(--color-primary); }
 
 .listenkarte .karte-icon { font-size: 1.5rem; line-height: 1; }
+.karte-produktfoto {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: var(--color-surface-2);
+}
 .listenkarte .karte-text { min-width: 0; }
 .listenkarte .karte-name {
     display: block;
@@ -318,6 +325,13 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
 }
 .mengen-editor input { flex: 1 1 128px; min-height: 42px; }
 .mengen-editor button { flex: 0 0 auto; min-height: 42px; }
+.produktfoto-aktionen {
+    flex: 1 0 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.produktfoto-aktionen button { flex: 1 1 145px; }
 
 .erledigt-block { margin-top: 4px; }
 .erledigt-kopf {
@@ -600,6 +614,30 @@ body:not(.modus-experte) .experte-nur { display: none !important; }
     font-size: 0.8rem !important;
 }
 .angebote-leer { margin-top: 12px !important; }
+.meine-maerkte { margin: 10px 0 4px; }
+.meine-maerkte > summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    cursor: pointer;
+}
+.maerkte-liste { list-style: none; margin: 8px 0; padding: 0; }
+.maerkte-liste li {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 9px;
+    min-height: 48px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-size: 0.84rem;
+}
+.maerkte-liste input { width: 22px; height: 22px; }
+.link-knopf { min-height: 38px; padding: 0.35em 0.65em; color: var(--color-text-muted); }
+.dialog-koerper select { min-height: 46px; width: 100%; }
 .angebotsliste {
     list-style: none;
     margin: 12px 0 0;
