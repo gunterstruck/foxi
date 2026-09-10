@@ -48,8 +48,8 @@ ab).
 
 ```bash
 npm run dev                 # http://localhost:8080 – ohne npm install
-npm install && npm test     # 48 Unit-Tests
-node tools/durchlauf.mjs    # 39 Prüfungen im echten Browser + Bilder
+npm install && npm test     # 66 Unit-Tests
+node tools/durchlauf.mjs    # 59 Prüfungen im echten Browser + Bilder
 ```
 
 Für die Prüfstrecke einmalig:
