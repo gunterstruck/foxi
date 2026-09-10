@@ -374,17 +374,26 @@ SoundFuchs es hält. **Sobald man eine Stamm-Datei bearbeitet, kann niemand
 mehr durch einen Vergleich feststellen, ob der Stamm noch der Stamm ist.**
 Alles Eigene steht in `src/styles/farben.css` und `foxi.css`.
 
-Der Unterschied zur Familie ist vier Werte groß:
+**Der Unterschied zur Familie ist ein einziger Wert groß** – und das ist
+selbst eine Entscheidung, die einmal anders getroffen war.
 
-| | TourFuchs / SoundFuchs | EinkaufsFuchs |
-|---|---|---|
-| `--color-primary` | `#0d9488` (3,74:1) | `#3f9142` (3,93:1) |
-| `--color-primary-dark` | `#0f766e` | `#2f6f34` (6,10:1) |
-| `--color-primary-light` | `#ccfbf1` | `#dff2df` |
-| `--color-bg` | `#f8fafc` | `#f7faf5` |
+Zuerst bekam EinkaufsFuchs einen eigenen grünen Leitton (`#3f9142`), passend
+zum Thema Lebensmittel. Das ist verworfen: Zwei fast gleiche Leittöne
+unterscheiden nicht, sie verwirren. Die Familie unterscheidet sich am
+**Funktionszeichen über dem Fuchskopf**, nicht an einem Petrol, das ein
+bisschen grüner ist. `stamm/variables.css` ist deshalb die einzige Quelle
+für Leitton, Untergrund, Textfarben und Kontraste.
+
+`farben.css` enthält heute genau eine zusätzliche Zeile:
+
+| | |
+|---|---|
+| `--color-primary-soft: #f0fdfa` | die sehr helle Fläche einer Kachel, die schon auf der Liste steht |
 
 Hausregel: gefüllte Flächen und Pillen tragen `--color-primary`, Text und
-Links tragen `--color-primary-dark`.
+Links tragen `--color-primary-dark`. Die Prüfstrecke hält den Leitton fest –
+sie lässt den Lauf durchfallen, wenn `--color-primary`, `theme-color` und
+das Manifest nicht alle drei auf demselben Wert stehen.
 
 ### 8.3 Datenmodell
 
@@ -468,9 +477,9 @@ ohnehin nicht, weil er zu spät kommt.
 ## 11. Prüfen
 
 ```bash
-npm test                    # 48 Unit-Tests: Sortierung, Suche, Gruppierung,
+npm test                    # 66 Unit-Tests: Sortierung, Suche, Gruppierung,
                             # Exporte, Import, Datenintegrität
-node tools/durchlauf.mjs    # 39 Prüfungen im echten Browser (Chromium,
+node tools/durchlauf.mjs    # 59 Prüfungen im echten Browser (Chromium,
                             # iPhone-13-Profil) + die Bilder in docs/bilder/
 ```
 
@@ -488,6 +497,24 @@ lässt den Lauf durchfallen.
 stammen aus der Schrift des Betriebssystems und sehen auf iOS anders aus;
 `navigator.share` mit Dateien verhält sich dort anders; und ob das lange
 Drücken sich gegen Safaris eigene Gesten durchsetzt, ist offen.
+
+---
+
+## 11a. Was dieses Dokument noch nicht beschreibt
+
+Ehrlicher Lückenvermerk, damit niemand die Beschreibung für vollständig
+hält. Im Code stehen Funktionen, die nach dieser Wissensbasis entstanden
+sind und hier noch fehlen:
+
+- **Produktgedächtnis** und **persönliche Märkte**
+- die Angebotsmarkierung an Listenzeilen (`.hat-angebot` in `ui/liste.js`)
+- Produktfotos an Listenzeilen (`.karte-produktfoto`)
+- Favicon-Fallbacks für klassische Crawler und der Service-Worker-Abruf
+  ohne HTTP-Zwischenspeicher (beides prüft `tools/durchlauf.mjs`)
+
+Wer eine davon anfasst, trägt sie bitte hier nach – und zwar mit der
+Begründung, nicht nur mit der Beschreibung. Das ist der Zweck dieses
+Dokuments.
 
 ---
 
